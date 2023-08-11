@@ -1,0 +1,1 @@
+# node_dynamics_model_with_triadic_interactions
