@@ -85,14 +85,10 @@ Examples
   # Node
   n_nodes = 3
   # Edge list
-  edge_list = [
-      [2, 3]
-  ]
+  edge_list = [[2, 3]]
   n_edges = len(edge_list)
   # Incidence matrix for the structural network
-  B = create_node_edge_incidence_matrix(
-      edge_list
-  )
+  B = create_node_edge_incidence_matrix(edge_list)
   # Incidence matrix for the triadic interactions
   K = np.array([[1, 0, 0]])
   model = NDwTIs(
