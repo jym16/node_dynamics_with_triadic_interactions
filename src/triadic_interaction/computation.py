@@ -1,40 +1,7 @@
 """
-This module provides functions for computations.
+Computation module.
 
-Functions
----------
-- create_node_edge_incidence_matrix : 
-    Create a node-edge incidence matrix B from a given edge list.
-- extract_by_std : 
-    Extract the data within a given number of standard deviations from its mean.
-- freedman_diaconis_rule : 
-    Compute the optimal bin width for a histogram.
-- discretise : 
-    Discretise the data.
-- estimate_pdf : 
-    Estimate the probability density function.
-- estimate_pdf_joint : 
-    Estimate the joint probability density function.
-- estimate_pdf_conditional : 
-    Estimate the conditional probability density function.
-- pdf_evolution : 
-    Compute the evolution of the probability density function.
-- covariance : 
-    Compute the covariance.
-- conditional_expectation : 
-    Compute the conditional expectation.
-- conditional_variance : 
-    Compute the conditional variance.
-- conditional_covariance : 
-    Compute the conditional covariance.
-- conditional_correlation : 
-    Compute the conditional correlation.
-- entropy : 
-    Compute the entropy.
-- entropy_joint : 
-    Compute the joint entropy.
-- conditional_mutual_information : 
-    Compute the conditional mutual information.
+This module provides functions for computations.
 """
 
 # Import packages
