@@ -167,7 +167,7 @@ def discretise(X, n_bins='fd'):
     
     return X_discrete, bin_edges
 
-def estimate_pdf(data, bins='fd', method='hist'):
+def estimate_pdf(data, bins='fd'):
     """Estimate the probability density function of the data by the histogram method.
 
     Parameters
@@ -179,11 +179,6 @@ def estimate_pdf(data, bins='fd', method='hist'):
         The number of bins or the method to compute the number of bins.
         - 'fd' : The number of bins is computed using the Freedman-Diaconis rule.
         - n : The number of bins for the variable.
-    method : str, optional
-        (default = 'hist')
-        The method to estimate the probability density function (pdf).
-        - 'hist' : The pdf is estimated by the histogram method.
-        - 'kde' : The pdf is estimated by the kernel density estimation method.
     
     Returns
     -------
@@ -198,73 +193,65 @@ def estimate_pdf(data, bins='fd', method='hist'):
                 'The data must be a 1D array or 2D array. '
             )
     elif data.ndim == 1 or (data.ndim == 2 and data.shape[1] == 1):
-        if method == 'hist':        
-            if isinstance(bins, str) and bins == 'fd':
-                _bins = freedman_diaconis_rule(data.flatten())
-            elif isinstance(bins, np.ndarray):
-                _bins = bins
-            elif isinstance(bins, int):
-                max_amp = np.max(np.abs(data))
-                _bins = np.linspace(-max_amp, max_amp, bins+1)
-                _bins = bins
-            else:
-                raise ValueError('Invalid bins.')
+        if isinstance(bins, str) and bins == 'fd':
+            _bins = freedman_diaconis_rule(data.flatten())
+        elif isinstance(bins, np.ndarray):
+            _bins = bins
+        elif isinstance(bins, int):
+            max_amp = np.max(np.abs(data))
+            _bins = np.linspace(-max_amp, max_amp, bins+1)
+            _bins = bins
+        else:
+            raise ValueError('Invalid bins.')
 
+        # Create histogram
+        pdf, bin_edges = np.histogram(
+            data, 
+            bins=_bins,
+            density=True
+        )
+        
+        # Calculate the x values corresponding to each bin
+        x = 0.5 * (bin_edges[1:] + bin_edges[:-1])
+        return pdf, x
+    elif data.ndim == 2:
+        # Get the number of samples
+        n_samples = data.shape[1]
+
+        if isinstance(bins, str) and bins == 'fd':
+            _bins = freedman_diaconis_rule(
+                data.flatten(), 
+                trim=n_samples
+            )
+            n_bins = len(_bins) - 1
+        elif isinstance(bins, np.ndarray):
+            _bins = bins
+            n_bins = len(_bins) - 1
+        elif isinstance(bins, int):
+            max_amp = np.max(np.abs(data))
+            _bins = np.linspace(-max_amp, max_amp, bins+1)
+            n_bins = bins
+        else:
+            raise ValueError('Invalid bins.')
+
+
+        PDF = np.zeros((n_bins, n_samples))
+        
+        for i in range(n_samples):
             # Create histogram
             pdf, bin_edges = np.histogram(
-                data, 
+                data[:, i], 
                 bins=_bins,
                 density=True
             )
-            
-            # Calculate the x values corresponding to each bin
-            x = 0.5 * (bin_edges[1:] + bin_edges[:-1])
-            return pdf, x
+            PDF[:, i] = pdf
         
-        else:
-            raise ValueError('The method not implemented.')
-    elif data.ndim == 2:
-        if method == 'hist':
-            # Get the number of samples
-            n_samples = data.shape[1]
+        # Calculate the x values corresponding to each bin
+        x = 0.5 * (bin_edges[1:] + bin_edges[:-1])
 
-            if isinstance(bins, str) and bins == 'fd':
-                _bins = freedman_diaconis_rule(
-                    data.flatten(), 
-                    trim=n_samples
-                )
-                n_bins = len(_bins) - 1
-            elif isinstance(bins, np.ndarray):
-                _bins = bins
-                n_bins = len(_bins) - 1
-            elif isinstance(bins, int):
-                max_amp = np.max(np.abs(data))
-                _bins = np.linspace(-max_amp, max_amp, bins+1)
-                n_bins = bins
-            else:
-                raise ValueError('Invalid bins.')
+        return PDF, x
 
-
-            PDF = np.zeros((n_bins, n_samples))
-            
-            for i in range(n_samples):
-                # Create histogram
-                pdf, bin_edges = np.histogram(
-                    data[:, i], 
-                    bins=_bins,
-                    density=True
-                )
-                PDF[:, i] = pdf
-            
-            # Calculate the x values corresponding to each bin
-            x = 0.5 * (bin_edges[1:] + bin_edges[:-1])
-
-            return PDF, x
-        
-        else:
-            raise ValueError('The method not implemented.')
-
-def estimate_pdf_joint(data, bins='fd', method='hist'):
+def estimate_pdf_joint(data, bins='fd'):
     """Estimate the joint probability density function of the data by the histogram method.
 
     Parameters
@@ -278,11 +265,6 @@ def estimate_pdf_joint(data, bins='fd', method='hist'):
         - n_1, n_2, ..., n_n : The number of bins for each variable.
         - n : The number of bins for all variables.
         - list : The bin edges for each variable.
-    method : str, optional
-        (default = 'hist')
-        The method to estimate the probability density function (pdf).
-        - 'hist' : The pdf is estimated by the histogram method.
-        - 'kde' : The pdf is estimated by the kernel density estimation method.
     
     Returns
     -------
@@ -292,50 +274,46 @@ def estimate_pdf_joint(data, bins='fd', method='hist'):
         The x values of the corresponding bins.
     
     """
-    if method == 'hist':
-        # Get the number of variables
-        if data.ndim == 1:
-            n_variables = 1
-        else:
-            n_variables = data.shape[1]
-
-        if isinstance(bins, str) and bins == 'fd':
-            _bins = [freedman_diaconis_rule(data[:, d]) for d in range(n_variables)]
-        elif isinstance(bins, list):
-            _bins = []
-            if len(bins) != n_variables:
-                raise ValueError('The length of bins must be equal to the number of variables.')
-            for idx, item in enumerate(bins):
-                if isinstance(item, np.ndarray):
-                    _bins.append(item)
-                elif isinstance(item, str) and item == 'fd':
-                    _bins.append(freedman_diaconis_rule(data[:, idx]))
-                elif isinstance(item, int):
-                    _bins.append(np.linspace(np.min(data[:, idx]), np.max(data[:, idx]), num=item))
-                else:
-                    raise ValueError("Invalid bin type at index", idx, ".")
-        elif isinstance(bins, int):
-            _bins = [np.linspace(-np.max(np.abs(data[:, d])), np.max(np.abs(data[:, d])), num=bins+1) for d in range(n_variables)]
-        else:
-            raise ValueError('Invalid bins.')
-        
-        # Create histogram
-        pdf, bin_edges = np.histogramdd(
-            data,
-            bins=_bins,
-            density=True
-        )
-        
-        # Calculate the x values corresponding to each bin
-        for d in range(n_variables):
-            bin_edges[d] = 0.5 * (bin_edges[d][1:] + bin_edges[d][:-1])
-        
-        return pdf, bin_edges
-    
+    # Get the number of variables
+    if data.ndim == 1:
+        n_variables = 1
     else:
-        raise ValueError('The method not implemented.')
+        n_variables = data.shape[1]
 
-def estimate_pdf_conditional(data, data_cond, val_cond, bins='fd', method='hist'):
+    if isinstance(bins, str) and bins == 'fd':
+        _bins = [freedman_diaconis_rule(data[:, d]) for d in range(n_variables)]
+    elif isinstance(bins, list):
+        _bins = []
+        if len(bins) != n_variables:
+            raise ValueError('The length of bins must be equal to the number of variables.')
+        for idx, item in enumerate(bins):
+            if isinstance(item, np.ndarray):
+                _bins.append(item)
+            elif isinstance(item, str) and item == 'fd':
+                _bins.append(freedman_diaconis_rule(data[:, idx]))
+            elif isinstance(item, int):
+                _bins.append(np.linspace(np.min(data[:, idx]), np.max(data[:, idx]), num=item))
+            else:
+                raise ValueError("Invalid bin type at index", idx, ".")
+    elif isinstance(bins, int):
+        _bins = [np.linspace(-np.max(np.abs(data[:, d])), np.max(np.abs(data[:, d])), num=bins+1) for d in range(n_variables)]
+    else:
+        raise ValueError('Invalid bins.')
+    
+    # Create histogram
+    pdf, bin_edges = np.histogramdd(
+        data,
+        bins=_bins,
+        density=True
+    )
+    
+    # Calculate the x values corresponding to each bin
+    for d in range(n_variables):
+        bin_edges[d] = 0.5 * (bin_edges[d][1:] + bin_edges[d][:-1])
+    
+    return pdf, bin_edges
+
+def estimate_pdf_conditional(data, data_cond, val_cond, bins='fd'):
     """Estimate the conditional probability density function of the data 
         by the histogram method.
     
@@ -353,11 +331,6 @@ def estimate_pdf_conditional(data, data_cond, val_cond, bins='fd', method='hist'
         - 'fd' : The number of bins is computed using the Freedman-Diaconis rule.
         - n_1, n_2, ..., n_n : The number of bins for each variable.
         - n : The number of bins for all variables.
-    method : str, optional
-        (default = 'hist')
-        The method to estimate the probability density function (pdf).
-        - 'hist' : The pdf is estimated by the histogram method.
-        - 'kde' : The pdf is estimated by the kernel density estimation method.
     
     Returns
     -------
@@ -367,47 +340,43 @@ def estimate_pdf_conditional(data, data_cond, val_cond, bins='fd', method='hist'
         The x values of the corresponding bins.
     
     """
-    if method == 'hist':
-        if data.ndim == 1:
-            data = data.reshape(-1, 1)
-        if data_cond.ndim == 1:
-            data_cond = data_cond.reshape(-1, 1)
-        elif data_cond.ndim == 2:
-            if data_cond.shape[1] != 1:
-                raise ValueError(
-                    'The data to be conditioned on must be ' \
-                    + 'a 2D array of shape (n_observations, 1). '
-                )
-        else:
+    if data.ndim == 1:
+        data = data.reshape(-1, 1)
+    if data_cond.ndim == 1:
+        data_cond = data_cond.reshape(-1, 1)
+    elif data_cond.ndim == 2:
+        if data_cond.shape[1] != 1:
             raise ValueError(
-                'The data must be a 2D array of ' \
-                + 'shape (n_observations, 1). '
+                'The data to be conditioned on must be ' \
+                + 'a 2D array of shape (n_observations, 1). '
             )
-
-        # Combine the data and the data to be conditioned on
-        data_joint = np.hstack((data, data_cond))
-
-        # Compute the joint probability density function
-        pdf_joint, bin_edges_joint = estimate_pdf_joint(
-            data=data_joint, 
-            bins=bins,
-            method=method
-        )
-        pdf_cond, _ = estimate_pdf(
-            data_cond, 
-            bins=bins, 
-            method=method
-        )
-
-        x = bin_edges_joint[0]
-
-        if pdf_cond[val_cond] == 0.:
-            return np.zeros_like(pdf_joint[..., val_cond]), x
-        else:
-            return pdf_joint[..., val_cond] / pdf_cond[val_cond], x
-
     else:
-        raise ValueError('The method not implemented.')
+        raise ValueError(
+            'The data must be a 2D array of ' \
+            + 'shape (n_observations, 1). '
+        )
+
+    # Combine the data and the data to be conditioned on
+    data_joint = np.hstack((data, data_cond))
+
+    # Compute the joint probability density function
+    pdf_joint, bin_edges_joint = estimate_pdf_joint(
+        data=data_joint, 
+        bins=bins,
+        method=method
+    )
+    pdf_cond, _ = estimate_pdf(
+        data_cond, 
+        bins=bins, 
+        method=method
+    )
+
+    x = bin_edges_joint[0]
+
+    if pdf_cond[val_cond] == 0.:
+        return np.zeros_like(pdf_joint[..., val_cond]), x
+    else:
+        return pdf_joint[..., val_cond] / pdf_cond[val_cond], x
 
 def pdf_evolution(X, t_max, n_x_resolution=50):
     """Estimate the time evolution of the probability density function of the data.
@@ -742,7 +711,6 @@ def conditional_correlation(X, Y, Z, bins='fd', method='default'):
                 else:
                     cond_corr[j] = np.corrcoef(X[Z_dig == j], Y[Z_dig == j])[0, 1]
                     cond_corr_stderr[j] = np.sqrt((1 - cond_corr[j]**2) / (np.sum(Z_dig == j) - 2))
-                    # cond_corr[j] = np.cov(X[Z_dig == j], Y[Z_dig == j])[0, 1] / np.sqrt(np.var(X[Z_dig == j], ddof=1) * np.var(Y[Z_dig == j], ddof=1))
         elif method == 'manual':
             cov, _ = conditional_covariance(X, Y, Z, bins=bins)
             var_X, _ = conditional_variance(X, Z, bins=bins)
@@ -791,7 +759,6 @@ def conditional_correlation(X, Y, Z, bins='fd', method='default'):
                     else:
                         cond_corr[j, i] = np.corrcoef(X[:, i][Z_dig_i == j], Y[:, i][Z_dig_i == j])[0, 1]
                         cond_corr_stderr[j, i] = np.sqrt((1 - cond_corr[j, i]**2) / (np.sum(Z_dig_i == j) - 2))
-                        # cond_corr[j, i] = np.cov(X[:, i][Z_dig_i == j], Y[:, i][Z_dig_i == j])[0, 1] / np.sqrt(np.var(X[:, i][Z_dig_i == j], ddof=1) * np.var(Y[:, i][Z_dig_i == j], ddof=1))
 
             elif method == 'manual':
                 cov, _ = conditional_covariance(X[:, i], Y[:, i], Z[:, i], bins=n_bins)
@@ -830,7 +797,6 @@ def entropy(pdf, x):
 
     # Calculate the entropy
     return - np.dot(pdf[pdf > 0.] * dx, np.log(pdf[pdf > 0.] * dx))
-    # return - np.dot(pdf[pdf > 0.], np.log(pdf[pdf > 0.]))
 
 def entropy_joint(pdf_joint, x):
     """Calculate the joint entropy of the probability density function.
@@ -857,9 +823,8 @@ def entropy_joint(pdf_joint, x):
 
     # Calculate the joint entropy
     return - np.dot(pdf_joint[pdf_joint > 0.] * dV, np.log(pdf_joint[pdf_joint > 0.] * dV))
-    # return - np.dot(pdf_joint[pdf_joint > 0.], np.log(pdf_joint[pdf_joint > 0.]))
 
-def conditional_mutual_information(X, Y, Z, bins='fd', method='hist'):
+def conditional_mutual_information(X, Y, Z, bins='fd'):
     """Calculate the conditional mutual information between X and Y given Z.
 
     Parameters
@@ -876,11 +841,6 @@ def conditional_mutual_information(X, Y, Z, bins='fd', method='hist'):
         - 'fd' : The number of bins is computed using the Freedman-Diaconis rule.
         - n_1, n_2, ..., n_n : The number of bins for each variable.
         - n : The number of bins for all variables.
-    method : str, optional
-        (default = 'hist')
-        The method to estimate the probability density function.
-        - 'hist' : The pdf is estimated by the histogram method.
-        - 'kde' : The pdf is estimated by the kernel density estimation method.
     
     Returns
     -------
@@ -924,9 +884,9 @@ def conditional_mutual_information(X, Y, Z, bins='fd', method='hist'):
             if np.sum(Z_dig == i) == 0:
                 cmi[i] = np.nan
                 continue
-            pdf_X, _x = estimate_pdf(X[Z_dig == i], bins=bins, method=method)
-            pdf_Y, _y = estimate_pdf(Y[Z_dig == i], bins=bins, method=method)
-            pdf_XY, _xy = estimate_pdf_joint(np.vstack((X[Z_dig == i], Y[Z_dig == i])).T, bins=bins, method=method)
+            pdf_X, _x = estimate_pdf(X[Z_dig == i], bins=bins)
+            pdf_Y, _y = estimate_pdf(Y[Z_dig == i], bins=bins)
+            pdf_XY, _xy = estimate_pdf_joint(np.vstack((X[Z_dig == i], Y[Z_dig == i])).T, bins=bins)
             H_X = entropy(pdf_X, _x)
             H_Y = entropy(pdf_Y, _y)
             H_XY = entropy_joint(pdf_XY, _xy)
@@ -963,9 +923,9 @@ def conditional_mutual_information(X, Y, Z, bins='fd', method='hist'):
             Z_dig = np.digitize(Z_j, _bins)
             
             for i in range(n_bins):
-                pdf_X, _x = estimate_pdf(X_j[Z_dig == i], bins=bins, method=method)
-                pdf_Y, _y = estimate_pdf(Y_j[Z_dig == i], bins=bins, method=method)
-                pdf_XY, _xy = estimate_pdf_joint(np.vstack((X_j[Z_dig == i], Y_j[Z_dig == i])).T, bins=bins, method=method)
+                pdf_X, _x = estimate_pdf(X_j[Z_dig == i], bins=bins)
+                pdf_Y, _y = estimate_pdf(Y_j[Z_dig == i], bins=bins)
+                pdf_XY, _xy = estimate_pdf_joint(np.vstack((X_j[Z_dig == i], Y_j[Z_dig == i])).T, bins=bins)
                 H_X = entropy(pdf_X[:, i], _x)
                 H_Y = entropy(pdf_Y[:, i], _y)
                 H_XY = entropy_joint(pdf_XY[:, :, i], _xy)

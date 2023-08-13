@@ -35,11 +35,11 @@ Functions
 
   ``discretise(X, n_bins='fd')`` : Discretise the time series data.
 
-  ``estimate_pdf(data, bins='fd', method='hist')`` : Estimate the probability density function.
+  ``estimate_pdf(data, bins='fd')`` : Estimate the probability density function.
   
-  ``estimate_pdf_joint(data, bins='fd', method='hist')`` : Estimate the joint probability density function.
+  ``estimate_pdf_joint(data, bins='fd')`` : Estimate the joint probability density function.
   
-  ``estimate_pdf_conditional(data, data_cond, val_cond, bins='fd', method='hist')`` : Estimate the conditional probability density function.
+  ``estimate_pdf_conditional(data, data_cond, val_cond, bins='fd')`` : Estimate the conditional probability density function.
   
   ``pdf_evolution(X, t_max, n_x_resolution=50)`` : Compute the evolution of the probability density function.
   
@@ -57,7 +57,7 @@ Functions
   
   ``entropy_joint(pdf_joint, x)`` : Compute the joint entropy.
   
-  ``conditional_mutual_information(X, Y, Z, bins='fd', method='hist')`` : Compute the conditional mutual information.
+  ``conditional_mutual_information(X, Y, Z, bins='fd')`` : Compute the conditional mutual information.
 
 ``triadic_interactions.computation`` : 
 
@@ -78,29 +78,31 @@ Functions
 Examples
 --------
   The following example demonstrates how to use the ``NDwTIs`` class to simulate the node dynamics on networks with triadic interactions.
-.. code block::
-    from triadic_interactions.model import NDwTIs, create_node_edge_incidence_matrix
-    # Node
-    n_nodes = 3
-    # Edge list
-    edge_list = [
-        [2, 3]
-    ]
-    n_edges = len(edge_list)
-    # Incidence matrix for the structural network
-    B = create_node_edge_incidence_matrix(
-        edge_list
-    )
-    # Incidence matrix for the triadic interactions
-    K = np.array([[1, 0, 0]])
-    model = NDwTIs(
-        B=B, K=K, w_pos=2., w_neg=1., 
-        threshold=1e-3, alpha=.1, noise_std=1e-3,
-        x_init=np.zeros(n_nodes), dt=1e-2, t_max=100.
-    )
-    # Run the simulation
-    model.run()
-    
+
+.. code-block:: python
+
+  from triadic_interactions.model import NDwTIs, create_node_edge_incidence_matrix
+  # Node
+  n_nodes = 3
+  # Edge list
+  edge_list = [
+      [2, 3]
+  ]
+  n_edges = len(edge_list)
+  # Incidence matrix for the structural network
+  B = create_node_edge_incidence_matrix(
+      edge_list
+  )
+  # Incidence matrix for the triadic interactions
+  K = np.array([[1, 0, 0]])
+  model = NDwTIs(
+      B=B, K=K, w_pos=2., w_neg=1., 
+      threshold=1e-3, alpha=.1, noise_std=1e-3,
+      x_init=np.zeros(n_nodes), dt=1e-2, t_max=100.
+  )
+  # Run the simulation
+  model.run()
+
 
 Acknowledgements
 ----------------
