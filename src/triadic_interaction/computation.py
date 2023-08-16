@@ -153,7 +153,7 @@ def discretise(X, n_bins='fd'):
     if isinstance(n_bins, str) and n_bins == 'fd':
         bin_edges = freedman_diaconis_rule(X)
     elif isinstance(n_bins, int):
-        bin_edges = [np.linspace(-np.max(np.abs(X[v])), np.max(np.abs(X[v])), n_bins+1) for v in range(n_variables)]
+        bin_edges = [np.linspace(-np.max(np.abs(X[:, v])), np.max(np.abs(X[:, v])), n_bins+1) for v in range(n_variables)]
     else:
         raise ValueError('The argument n_bins must be an integer or "fd".')
     
