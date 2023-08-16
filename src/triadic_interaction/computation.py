@@ -642,7 +642,7 @@ def conditional_covariance(X, Y, Z, bins='fd'):
 
     return cov_cond, z
 
-def conditional_correlation(X, Y, Z, bins='fd', method='default'):
+def conditional_correlation(X, Y, Z, bins='fd'):
     """Compute the conditional variance.
     
     Parameter
@@ -657,11 +657,6 @@ def conditional_correlation(X, Y, Z, bins='fd', method='default'):
         (default = 'fd')
         The number of bins or the method to compute the number of bins.
         - 'fd' : Freedman-Diaconis rule
-    method : str, optional
-        (default = 'default')
-        The method to compute the conditional correlation.
-        - 'default' : Pearson correlation coefficient
-        - 'manual' : manual computation
     
     Returns
     -------
@@ -702,25 +697,13 @@ def conditional_correlation(X, Y, Z, bins='fd', method='default'):
         X = np.digitize(X, freedman_diaconis_rule(X))
         Y = np.digitize(Y, freedman_diaconis_rule(Y))
 
-        if method == 'default':
-            # Loop over bins
-            for j in range(n_bins):
-                if np.sum(Z_dig == j) < 10:
-                    cond_corr[j] = np.nan
-                else:
-                    cond_corr[j] = np.corrcoef(X[Z_dig == j], Y[Z_dig == j])[0, 1]
-                    cond_corr_stderr[j] = np.sqrt((1 - cond_corr[j]**2) / (np.sum(Z_dig == j) - 2))
-        elif method == 'manual':
-            cov, _ = conditional_covariance(X, Y, Z, bins=bins)
-            var_X, _ = conditional_variance(X, Z, bins=bins)
-            var_Y, _ = conditional_variance(Y, Z, bins=bins)
-
-            cond_corr = cov / np.sqrt(var_X * var_Y)
-            cond_corr_stderr = np.sqrt((1 - cond_corr**2) / (np.sum(Z_dig == j) - 2))
-        else:
-            raise ValueError(
-                'The method not implemented.'
-            )
+        # Loop over bins
+        for j in range(n_bins):
+            if np.sum(Z_dig == j) < 10:
+                cond_corr[j] = np.nan
+            else:
+                cond_corr[j] = np.corrcoef(X[Z_dig == j], Y[Z_dig == j])[0, 1]
+                cond_corr_stderr[j] = np.sqrt((1 - cond_corr[j]**2) / (np.sum(Z_dig == j) - 2))
         
         z = 0.5 * (_bins[1:] + _bins[:-1])
         return cond_corr, z, cond_corr_stderr
@@ -750,26 +733,13 @@ def conditional_correlation(X, Y, Z, bins='fd', method='default'):
             # Get the digitised data
             Z_dig_i = np.digitize(Z[:, i], _bins)
 
-            if method == 'default':
-                # Loop over bins
-                for j in range(n_bins):
-                    if np.sum(Z_dig_i == j) < 10:
-                        cond_corr[j, i] = np.nan
-                    else:
-                        cond_corr[j, i] = np.corrcoef(X[:, i][Z_dig_i == j], Y[:, i][Z_dig_i == j])[0, 1]
-                        cond_corr_stderr[j, i] = np.sqrt((1 - cond_corr[j, i]**2) / (np.sum(Z_dig_i == j) - 2))
-
-            elif method == 'manual':
-                cov, _ = conditional_covariance(X[:, i], Y[:, i], Z[:, i], bins=n_bins)
-                var_X, _ = conditional_variance(X[:, i], Z[:, i], bins=n_bins)
-                var_Y, _ = conditional_variance(Y[:, i], Z[:, i], bins=n_bins)
-
-                cond_corr[:, i] = cov / np.sqrt(var_X * var_Y)
-                cond_corr_stderr[:, i] = np.sqrt((1 - cond_corr[:, i]**2) / (np.sum(Z_dig_i == j) - 2))
-            else:
-                raise ValueError(
-                    'The method not implemented.'
-                )
+            # Loop over bins
+            for j in range(n_bins):
+                if np.sum(Z_dig_i == j) < 10:
+                    cond_corr[j, i] = np.nan
+                else:
+                    cond_corr[j, i] = np.corrcoef(X[:, i][Z_dig_i == j], Y[:, i][Z_dig_i == j])[0, 1]
+                    cond_corr_stderr[j, i] = np.sqrt((1 - cond_corr[j, i]**2) / (np.sum(Z_dig_i == j) - 2))
         
         z = 0.5 * (_bins[1:] + _bins[:-1])
         return cond_corr, z, cond_corr_stderr
