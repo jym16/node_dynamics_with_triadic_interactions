@@ -5,14 +5,12 @@ import matplotlib.pyplot as plt
 # from matplotlib import colors
 def main():
     # Define the identifier
-    identifiers = [
-        "motif-a_w-positive-TI", "motif-a_w-negative-TI", 
-        "motif-b_w-positive-TI", "motif-b_w-negative-TI",
-        "motif-c_w-positive-TI", "motif-c_w-negative-TI"
-    ]
+    motifs = ["04", "05", "06"]
+    n_motifs = len(motifs)
+    signs = ["-", "+"]
+    n_signs = len(signs)
+    identifiers = [m + s for m in motifs for s in signs]
     _bins = 50 # 'fd' if you want to use Freedman-Diaconis rule
-    n_motifs = 3
-    n_signs = 2
 
     logscale = False
     output_file = "./figure/comparison_pdf_log.pdf" if logscale else "./figure/comparison_pdf.pdf"
