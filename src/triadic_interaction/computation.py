@@ -362,13 +362,11 @@ def estimate_pdf_conditional(data, data_cond, val_cond, bins='fd'):
     # Compute the joint probability density function
     pdf_joint, bin_edges_joint = estimate_pdf_joint(
         data=data_joint, 
-        bins=bins,
-        method=method
+        bins=bins
     )
     pdf_cond, _ = estimate_pdf(
         data_cond, 
-        bins=bins, 
-        method=method
+        bins=bins
     )
 
     x = bin_edges_joint[0]
@@ -700,6 +698,7 @@ def conditional_correlation(X, Y, Z, bins='fd', method='default'):
         
         # Get the digitised data
         Z_dig = np.digitize(Z, _bins)
+        print(np.unique(Z_dig, return_counts=True))
         X = np.digitize(X, freedman_diaconis_rule(X))
         Y = np.digitize(Y, freedman_diaconis_rule(Y))
 
