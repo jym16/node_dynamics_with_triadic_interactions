@@ -8,6 +8,7 @@ This module provides functions for computations.
 import numpy as np
 from scipy.sparse import csc_matrix
 from scipy.stats import iqr
+import scipy.stats as sps
 
 def create_node_edge_incidence_matrix(edge_list):
     """Create a node-edge incidence matrix B from a given edge list.
@@ -856,8 +857,10 @@ def conditional_mutual_information(X, Y, Z, bins='fd'):
             pdf_X, _x = estimate_pdf(X[Z_dig == i], bins=bins)
             pdf_Y, _y = estimate_pdf(Y[Z_dig == i], bins=bins)
             pdf_XY, _xy = estimate_pdf_joint(np.vstack((X[Z_dig == i], Y[Z_dig == i])).T, bins=bins)
-            H_X = entropy(pdf_X, _x)
-            H_Y = entropy(pdf_Y, _y)
+            pmf_X = pdf_X * (_x[1] - _x[0])
+            pmf_Y = pdf_Y * (_y[1] - _y[0])
+            H_X = sps.entropy(pmf_X)
+            H_Y = sps.entropy(pmf_Y)
             H_XY = entropy_joint(pdf_XY, _xy)
             # assert(H_X + H_Y >= H_XY)
             cmi[i] = H_X + H_Y - H_XY
@@ -895,8 +898,10 @@ def conditional_mutual_information(X, Y, Z, bins='fd'):
                 pdf_X, _x = estimate_pdf(X_j[Z_dig == i], bins=bins)
                 pdf_Y, _y = estimate_pdf(Y_j[Z_dig == i], bins=bins)
                 pdf_XY, _xy = estimate_pdf_joint(np.vstack((X_j[Z_dig == i], Y_j[Z_dig == i])).T, bins=bins)
-                H_X = entropy(pdf_X[:, i], _x)
-                H_Y = entropy(pdf_Y[:, i], _y)
+                pmf_X = pdf_X * (_x[1] - _x[0])
+                pmf_Y = pdf_Y * (_y[1] - _y[0])
+                H_X = sps.entropy(pdf_X[:, i])
+                H_Y = sps.entropy(pdf_Y[:, i])
                 H_XY = entropy_joint(pdf_XY[:, :, i], _xy)
                 # assert(H_X + H_Y >= H_XY)
                 cmi[i, j] = H_X + H_Y - H_XY

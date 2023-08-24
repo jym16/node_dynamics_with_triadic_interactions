@@ -837,6 +837,13 @@ def plot_conditional_correlation(Xgrids, cond_corr, order, output_file, std=Fals
     else:
         # Create a figure
         fig, ax = plt.subplots()
+
+        if Xrange is None:
+            Xmin = np.min(Xgrids)
+            Xmax = np.max(Xgrids)
+        else:
+            Xmin = Xrange[0]
+            Xmax = Xrange[1]
         
         # Ymin, Ymax = -1, 1
         
@@ -873,8 +880,8 @@ def plot_conditional_correlation(Xgrids, cond_corr, order, output_file, std=Fals
             ax.legend()
             
         ax.set_xlim(
-            np.min(Xgrids),
-            np.max(Xgrids)
+            Xmin,
+            Xmax
         )
         # ax.set_ylim(
         #     Ymin,
@@ -898,7 +905,7 @@ def plot_conditional_correlation(Xgrids, cond_corr, order, output_file, std=Fals
     # Close the figure
     plt.close(fig)
 
-def plot_conditional_mutual_information(Xgrids, cmi, order, output_file, std=False, theory=None):
+def plot_conditional_mutual_information(Xgrids, cmi, order, output_file, std=False, Xrange=None, theory=None):
     """Plot conditional mutual information.
     
     Parameter
@@ -914,6 +921,10 @@ def plot_conditional_mutual_information(Xgrids, cmi, order, output_file, std=Fal
     std : bool, optional
          (default = False)
         If True, plot the standard deviation.
+    Xrange : bool or list of tuples, optional
+        (default = None)
+        If None, do not set the range of the x-axis.
+        If list, set the range of the x-axis.
     theory : function or list of functions, optional
             (Default value = None)
         The theoretical solutions.
@@ -929,8 +940,13 @@ def plot_conditional_mutual_information(Xgrids, cmi, order, output_file, std=Fal
     # If the input is an array
     if isinstance(Xgrids, list):
         n_data = len(Xgrids)
-        Xmin = [np.min(Xgrids[i]) for i in range(n_data)]
-        Xmax = [np.max(Xgrids[i]) for i in range(n_data)]
+
+        if Xrange is None:
+            Xmin = [np.min(Xgrids[i]) for i in range(n_data)]
+            Xmax = [np.max(Xgrids[i]) for i in range(n_data)]
+        else:
+            Xmin = [Xrange[i][0] for i in range(n_data)]
+            Xmax = [Xrange[i][1] for i in range(n_data)]
         
         # Create a figure
         fig, ax = plt.subplots(
@@ -996,6 +1012,11 @@ def plot_conditional_mutual_information(Xgrids, cmi, order, output_file, std=Fal
                 Xmin[i],
                 Xmax[i]
             )
+
+            ax[i].set_ylim(
+                min(np.min(theory[i](Xgrids[i])), np.min(cmi[i][(Xgrids[i] >= Xmin[i]) & (Xgrids[i] <= Xmax[i])])) - 0.1,
+                max(np.max(theory[i](Xgrids[i])), np.max(cmi[i][(Xgrids[i] >= Xmin[i]) & (Xgrids[i] <= Xmax[i])])) + 0.1
+            )
             
             # Set the labels
             ax[i].set_xlabel(
@@ -1008,6 +1029,13 @@ def plot_conditional_mutual_information(Xgrids, cmi, order, output_file, std=Fal
             )
         
     else:
+        if Xrange is None:
+            Xmin = np.min(Xgrids)
+            Xmax = np.max(Xgrids)
+        else:
+            Xmin = Xrange[0]
+            Xmax = Xrange[1]
+
         # Create a figure
         fig, ax = plt.subplots()
         
@@ -1029,8 +1057,13 @@ def plot_conditional_mutual_information(Xgrids, cmi, order, output_file, std=Fal
             ax.legend()
         
         ax.set_xlim(
-            np.min(Xgrids),
-            np.max(Xgrids)
+            Xmin,
+            Xmax
+        )
+
+        ax.set_ylim(
+            .75 * min(np.min(theory(Xgrids)), np.min(cmi[(Xgrids >= Xmin) & (Xgrids <= Xmax)])),
+            1.25 * max(np.max(theory(Xgrids)), np.max(cmi[(Xgrids >= Xmin) & (Xgrids <= Xmax)]))
         )
         
         # Set the labels

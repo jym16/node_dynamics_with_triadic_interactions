@@ -21,10 +21,10 @@ def main():
     _bins = 50 # 'fd'
 
     """Base path."""
-    data_basepath = "./data/testcase" + identifier
-    fig_basepath = "./figure/testcase" + identifier
+    data_basepath = "./data/" + identifier
+    fig_basepath = "./figure/" + identifier
 
-    """Data filepaths."""
+    """"Data filepaths."""
     data_timeseries = os.path.join(data_basepath, "{}_timeseries.npy".format(identifier))
     data_p_evolution = os.path.join(data_basepath, "{}_p_evolution.npy".format(identifier))
     data_cond_corr_123 = os.path.join(data_basepath, "{}_cond_corr_123_{}bins.npy".format(identifier, _bins))
@@ -36,6 +36,12 @@ def main():
     data_cond_corr_231 = os.path.join(data_basepath, "{}_cond_corr_231_{}bins.npy".format(identifier, _bins))
     data_cond_corr_231_x = os.path.join(data_basepath, "{}_cond_corr_231_x_{}bins.npy".format(identifier, _bins))
     data_cond_corr_231_stderr = os.path.join(data_basepath, "{}_cond_corr_231_stderr_{}bins.npy".format(identifier, _bins))
+    data_cmi_123 = os.path.join(data_basepath, "{}_cmi_123_{}bins.npy".format(identifier, _bins))
+    data_cmi_123_x = os.path.join(data_basepath, "{}_cmi_123_x_{}bins.npy".format(identifier, _bins))
+    data_cmi_132 = os.path.join(data_basepath, "{}_cmi_132_{}bins.npy".format(identifier, _bins))
+    data_cmi_132_x = os.path.join(data_basepath, "{}_cmi_132_x_{}bins.npy".format(identifier, _bins))
+    data_cmi_231 = os.path.join(data_basepath, "{}_cmi_231_{}bins.npy".format(identifier, _bins))
+    data_cmi_231_x = os.path.join(data_basepath, "{}_cmi_231_x_{}bins.npy".format(identifier, _bins))
 
     """Figure filepaths."""
     fig_timeseries = os.path.join(fig_basepath, "{}_timeseries.pdf".format(identifier))
@@ -45,6 +51,7 @@ def main():
     fig_cov = os.path.join(fig_basepath, "{}_covariance.pdf".format(identifier))
     fig_cond_corr = os.path.join(fig_basepath, "{}_cond_corr_{}bins.pdf".format(identifier, _bins))
     fig_cond_corr_stderr = os.path.join(fig_basepath, "{}_cond_corr_stderr_{}bins.pdf".format(identifier, _bins))
+    fig_cmi = os.path.join(fig_basepath, "{}_cmi_{}bins.pdf".format(identifier, _bins))
 
     # If the data directory does not exist
     if os.path.exists(data_basepath) == False:
@@ -301,6 +308,78 @@ def main():
         std=[dC23_1, dC13_2, dC12_3],
         Xrange=plot_range,
         theory=cond_corr_theory
+    )
+
+    # Compute the theoretical conditional mutual information
+    cmi_theory = [
+        lambda x : 0.5 * np.log((alpha + 2 * w_neg) ** 2 / ((alpha + w_neg) * (alpha + 3 * w_neg))) + 0. * x,
+        lambda x : 0.5 * np.log((alpha + 2 * w_neg) ** 2 / ((alpha + w_neg) * (alpha + 3 * w_neg))) + 0. * x,
+        lambda x : 0.5 * np.log((alpha + 2 * w_neg) ** 2 / ((alpha + w_neg) * (alpha + 3 * w_neg))) + 0. * x
+    ]
+
+    if os.path.exists(data_cmi_231) and os.path.exists(data_cmi_231_x):
+        CMI23_1 = np.load(data_cmi_231)
+        Xgrid23_1 = np.load(data_cmi_231_x)
+    else:
+        CMI23_1, Xgrid23_1 = conditional_mutual_information(
+            X=X[1].flatten(),
+            Y=X[2].flatten(),
+            Z=X[0].flatten(), 
+            bins=_bins
+        )
+        np.save(
+            data_cmi_231, 
+            CMI23_1
+        )
+        np.save(
+            data_cmi_231_x, 
+            Xgrid23_1
+        )
+    if os.path.exists(data_cmi_132) and os.path.exists(data_cmi_132_x):
+        CMI13_2 = np.load(data_cmi_132)
+        Xgrid13_2 = np.load(data_cmi_132_x)
+    else:
+        CMI13_2, Xgrid13_2 = conditional_mutual_information(
+            X=X[0].flatten(),
+            Y=X[2].flatten(),
+            Z=X[1].flatten(), 
+            bins=_bins
+        )
+        np.save(
+            data_cmi_132, 
+            CMI13_2
+        )
+        np.save(
+            data_cmi_132_x, 
+            Xgrid13_2
+        )
+    if os.path.exists(data_cmi_123) and os.path.exists(data_cmi_123_x):
+        CMI12_3 = np.load(data_cmi_123)
+        Xgrid12_3 = np.load(data_cmi_123_x)
+    else:
+        CMI12_3, Xgrid12_3 = conditional_mutual_information(
+            X=X[0].flatten(),
+            Y=X[1].flatten(),
+            Z=X[2].flatten(), 
+            bins=_bins
+        )
+        np.save(
+            data_cmi_123, 
+            CMI12_3
+        )
+        np.save(
+            data_cmi_123_x, 
+            Xgrid12_3
+        )
+    
+    # Plot the conditional mutual information
+    plot_conditional_mutual_information(
+        Xgrids=[Xgrid23_1, Xgrid13_2, Xgrid12_3], 
+        cmi=[CMI23_1, CMI13_2, CMI12_3],
+        order=[(2,3,1), (1,3,2), (1,2,3)],
+        output_file=fig_cmi,
+        Xrange=plot_range,
+        theory=cmi_theory
     )
 
 if __name__ == "__main__":
