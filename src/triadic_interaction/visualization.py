@@ -1013,10 +1013,10 @@ def plot_conditional_mutual_information(Xgrids, cmi, order, output_file, std=Fal
                 Xmax[i]
             )
 
-            ax[i].set_ylim(
-                min(np.min(theory[i](Xgrids[i])), np.min(cmi[i][(Xgrids[i] >= Xmin[i]) & (Xgrids[i] <= Xmax[i])])) - 0.1,
-                max(np.max(theory[i](Xgrids[i])), np.max(cmi[i][(Xgrids[i] >= Xmin[i]) & (Xgrids[i] <= Xmax[i])])) + 0.1
-            )
+            # ax[i].set_ylim(
+            #     min(np.min(theory[i](Xgrids[i])), np.min(cmi[i][(Xgrids[i] >= Xmin[i]) & (Xgrids[i] <= Xmax[i])])) - 0.1,
+            #     max(np.max(theory[i](Xgrids[i])), np.max(cmi[i][(Xgrids[i] >= Xmin[i]) & (Xgrids[i] <= Xmax[i])])) + 0.1
+            # )
             
             # Set the labels
             ax[i].set_xlabel(
@@ -1070,9 +1070,9 @@ def plot_conditional_mutual_information(Xgrids, cmi, order, output_file, std=Fal
         ax.set_xlabel(
             '$X_{}$'.format(order[2])
         )
-        ax.set_ylabel(
-            '$I(X_{}; X_{} \mid X_{})$'.format(order[0], order[1], order[2])
-        )
+        # ax.set_ylabel(
+        #     '$I(X_{}; X_{} \mid X_{})$'.format(order[0], order[1], order[2])
+        # )
 
     # Apply the layout
     fig.tight_layout()

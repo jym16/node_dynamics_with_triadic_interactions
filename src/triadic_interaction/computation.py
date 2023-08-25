@@ -9,6 +9,7 @@ import numpy as np
 from scipy.sparse import csc_matrix
 from scipy.stats import iqr
 import scipy.stats as sps
+from scipy.special import kl_div
 
 def create_node_edge_incidence_matrix(edge_list):
     """Create a node-edge incidence matrix B from a given edge list.
@@ -794,6 +795,223 @@ def entropy_joint(pdf_joint, x):
     # Calculate the joint entropy
     return - np.dot(pdf_joint[pdf_joint > 0.] * dV, np.log(pdf_joint[pdf_joint > 0.] * dV))
 
+def estimate_pmf(data, bins='fd'):
+    """Estimate the probability mass function of the data by the histogram method.
+
+    Parameters
+    ----------
+    data : numpy.ndarray of shape (n_observations,) or (n_observations, 1)
+        The data.
+    bins : str or a sequence of int or int, optional
+        (default = None)
+        The number of bins or the method to compute the number of bins.
+        - 'fd' : The number of bins is computed using the Freedman-Diaconis rule.
+        - n : The number of bins for the variable.
+    
+    Returns
+    -------
+    P : numpy.ndarray of shape (n_bins, n_variables)
+        The estimated probability mass function of the data.
+    X : numpy.ndarray of shape (n_bins, n_variables)
+        The bin centers for variables.
+    
+    """
+    if data.ndim > 2:
+        raise ValueError(
+                'The data must be a 1D array or 2D array. '
+            )
+    elif data.ndim == 1 or (data.ndim == 2 and data.shape[1] == 1):
+        if isinstance(bins, str) and bins == 'fd':
+            _bins = freedman_diaconis_rule(data.flatten())
+        elif isinstance(bins, np.ndarray):
+            _bins = bins
+        elif isinstance(bins, int):
+            max_amp = np.max(np.abs(data))
+            _bins = np.linspace(-max_amp, max_amp, bins+1)
+            _bins = bins
+        else:
+            raise ValueError('Invalid bins.')
+
+        # Create histogram
+        pmf, bin_edges = np.histogram(
+            data, 
+            bins=_bins,
+            density=False
+        )
+        pmf = pmf.astype(float)
+        pmf /= np.sum(pmf)
+
+        # Calculate the x values corresponding to each bin
+        x = 0.5 * (bin_edges[1:] + bin_edges[:-1])
+    
+        return pmf, x
+    
+    elif data.ndim == 2:
+        # Get the number of samples
+        n_samples = data.shape[1]
+
+        if isinstance(bins, str) and bins == 'fd':
+            _bins = freedman_diaconis_rule(
+                data.flatten(), 
+                trim=n_samples
+            )
+            n_bins = len(_bins) - 1
+        elif isinstance(bins, np.ndarray):
+            _bins = bins
+            n_bins = len(_bins) - 1
+        elif isinstance(bins, int):
+            max_amp = np.max(np.abs(data))
+            _bins = np.linspace(-max_amp, max_amp, bins+1)
+            n_bins = bins
+        else:
+            raise ValueError('Invalid bins.')
+
+
+        PMF = np.zeros((n_bins, n_samples))
+        
+        for i in range(n_samples):
+            # Create histogram
+            pmf, bin_edges = np.histogram(
+                data[:, i], 
+                bins=_bins,
+                density=True
+            )
+            pmf = pmf.astype(float)
+            pmf /= np.sum(pmf)
+            PMF[:, i] = pmf
+        
+        # Calculate the x values corresponding to each bin
+        x = 0.5 * (bin_edges[1:] + bin_edges[:-1])
+
+        return PMF, x
+
+def estimate_pmf_joint(data, bins='fd'):
+    """Estimate the joint probability mass function of the data by the histogram method.
+
+    Parameters
+    ----------
+    data : numpy.ndarray of shape (n_observations, n_variables)
+        The data.
+    bins : str or a sequence of int or int or list, optional
+        (default = None)
+        The number of bins or the method to compute the number of bins.
+        - 'fd' : The number of bins is computed using the Freedman-Diaconis rule.
+        - n_1, n_2, ..., n_n : The number of bins for each variable.
+        - n : The number of bins for all variables.
+        - list : The bin edges for each variable.
+    
+    Returns
+    -------
+    pmf_joint : numpy.ndarray of shape (n_bins, n_variables)
+        The estimated probability mass function of the data.
+    x : list of numpy.ndarray of shape (n_bins-1,)
+        The x values of the corresponding bins.
+    
+    """
+    # Get the number of variables
+    if data.ndim == 1:
+        n_variables = 1
+    else:
+        n_variables = data.shape[1]
+
+    if isinstance(bins, str) and bins == 'fd':
+        _bins = [freedman_diaconis_rule(data[:, d]) for d in range(n_variables)]
+    elif isinstance(bins, list):
+        _bins = []
+        if len(bins) != n_variables:
+            raise ValueError('The length of bins must be equal to the number of variables.')
+        for idx, item in enumerate(bins):
+            if isinstance(item, np.ndarray):
+                _bins.append(item)
+            elif isinstance(item, str) and item == 'fd':
+                _bins.append(freedman_diaconis_rule(data[:, idx]))
+            elif isinstance(item, int):
+                _bins.append(np.linspace(np.min(data[:, idx]), np.max(data[:, idx]), num=item))
+            else:
+                raise ValueError("Invalid bin type at index", idx, ".")
+    elif isinstance(bins, int):
+        _bins = [np.linspace(-np.max(np.abs(data[:, d])), np.max(np.abs(data[:, d])), num=bins+1) for d in range(n_variables)]
+    else:
+        raise ValueError('Invalid bins.')
+    
+    # Create histogram
+    pmf, bin_edges = np.histogramdd(
+        data,
+        bins=_bins,
+        density=True
+    )
+    pmf = pmf.astype(float)
+    pmf /= np.sum(pmf)
+    
+    # Calculate the x values corresponding to each bin
+    for d in range(n_variables):
+        bin_edges[d] = 0.5 * (bin_edges[d][1:] + bin_edges[d][:-1])
+    
+    return pmf, bin_edges
+
+def estimate_pmf_conditional(data, data_cond, val_cond, bins='fd'):
+    """Estimate the conditional probability mass function of the data 
+        by the histogram method.
+    
+    Parameters
+    ----------
+    data : numpy.ndarray of shape (n_observations, n_variables)
+        The data.
+    data_cond : numpy.ndarray of shape (n_observations, n_conditional_variables)
+        The data to be conditioned on.
+    val_cond : int
+        The value of the variable to condition on.
+    bins : str or a sequence of int or int, optional
+        (default = None)
+        The number of bins or the method to compute the number of bins.
+        - 'fd' : The number of bins is computed using the Freedman-Diaconis rule.
+        - n_1, n_2, ..., n_n : The number of bins for each variable.
+        - n : The number of bins for all variables.
+    
+    Returns
+    -------
+    pmf_conditional : numpy.ndarray of shape (n_bins, n_variables)
+        The estimated probability mass function of the data.
+    x : list of numpy.ndarray of shape (n_bins-1,)
+        The x values of the corresponding bins.
+    
+    """
+    if data.ndim == 1:
+        data = data.reshape(-1, 1)
+    if data_cond.ndim == 1:
+        data_cond = data_cond.reshape(-1, 1)
+    elif data_cond.ndim == 2:
+        if data_cond.shape[1] != 1:
+            raise ValueError(
+                'The data to be conditioned on must be ' \
+                + 'a 2D array of shape (n_observations, 1). '
+            )
+    else:
+        raise ValueError(
+            'The data must be a 2D array of ' \
+            + 'shape (n_observations, 1). '
+        )
+
+    # Combine the data and the data to be conditioned on
+    data_joint = np.hstack((data, data_cond))
+
+    # Compute the joint probability density function
+    pmf_joint, bin_edges_joint = estimate_pmf_joint(
+        data=data_joint, 
+        bins=bins
+    )
+    pmf_cond, _ = estimate_pmf(
+        data_cond, 
+        bins=bins
+    )
+
+    x = bin_edges_joint[0]
+
+    if pmf_cond[val_cond] == 0.:
+        return np.zeros_like(pmf_joint[..., val_cond]), x
+    else:
+        return pmf_joint[..., val_cond] / pmf_cond[val_cond], x
+
 def conditional_mutual_information(X, Y, Z, bins='fd'):
     """Calculate the conditional mutual information between X and Y given Z.
 
@@ -854,17 +1072,14 @@ def conditional_mutual_information(X, Y, Z, bins='fd'):
             if np.sum(Z_dig == i) == 0:
                 cmi[i] = np.nan
                 continue
-            pdf_X, _x = estimate_pdf(X[Z_dig == i], bins=bins)
-            pdf_Y, _y = estimate_pdf(Y[Z_dig == i], bins=bins)
-            pdf_XY, _xy = estimate_pdf_joint(np.vstack((X[Z_dig == i], Y[Z_dig == i])).T, bins=bins)
-            pmf_X = pdf_X * (_x[1] - _x[0])
-            pmf_Y = pdf_Y * (_y[1] - _y[0])
-            H_X = sps.entropy(pmf_X)
-            H_Y = sps.entropy(pmf_Y)
-            H_XY = entropy_joint(pdf_XY, _xy)
-            # assert(H_X + H_Y >= H_XY)
-            cmi[i] = H_X + H_Y - H_XY
-        
+            pmf_X, _x = estimate_pmf(X[Z_dig == i], bins=bins)
+            pmf_Y, _y = estimate_pmf(Y[Z_dig == i], bins=bins)
+            pmf_XY, _xy = estimate_pmf_joint(np.vstack((X[Z_dig == i], Y[Z_dig == i])).T, bins=bins)
+
+            for j in range(pmf_XY.shape[0]):
+                for k in range(pmf_XY.shape[1]):
+                    cmi[i] += kl_div(pmf_XY[j, k], pmf_X[j] * pmf_Y[k])
+            
         z = 0.5 * (_bins[1:] + _bins[:-1])
 
         return cmi, z
@@ -895,16 +1110,12 @@ def conditional_mutual_information(X, Y, Z, bins='fd'):
             Z_dig = np.digitize(Z_j, _bins)
             
             for i in range(n_bins):
-                pdf_X, _x = estimate_pdf(X_j[Z_dig == i], bins=bins)
-                pdf_Y, _y = estimate_pdf(Y_j[Z_dig == i], bins=bins)
-                pdf_XY, _xy = estimate_pdf_joint(np.vstack((X_j[Z_dig == i], Y_j[Z_dig == i])).T, bins=bins)
-                pmf_X = pdf_X * (_x[1] - _x[0])
-                pmf_Y = pdf_Y * (_y[1] - _y[0])
-                H_X = sps.entropy(pdf_X[:, i])
-                H_Y = sps.entropy(pdf_Y[:, i])
-                H_XY = entropy_joint(pdf_XY[:, :, i], _xy)
-                # assert(H_X + H_Y >= H_XY)
-                cmi[i, j] = H_X + H_Y - H_XY
+                pmf_X, _x = estimate_pmf(X_j[Z_dig == i], bins=bins)
+                pmf_Y, _y = estimate_pmf(Y_j[Z_dig == i], bins=bins)
+                pmf_XY, _xy = estimate_pmf_joint(np.vstack((X_j[Z_dig == i], Y_j[Z_dig == i])).T, bins=bins)
+                for k in range(pmf_XY.shape[0]):
+                    for l in range(pmf_XY.shape[1]):
+                        cmi[i, j] += kl_div(pmf_XY[k, l], pmf_X[k] * pmf_Y[l])
 
         z = 0.5 * (_bins[1:] + _bins[:-1])
 
