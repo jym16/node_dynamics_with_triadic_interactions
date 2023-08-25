@@ -1075,10 +1075,10 @@ def conditional_mutual_information(X, Y, Z, bins='fd'):
             pmf_X, _x = estimate_pmf(X[Z_dig == i], bins=bins)
             pmf_Y, _y = estimate_pmf(Y[Z_dig == i], bins=bins)
             pmf_XY, _xy = estimate_pmf_joint(np.vstack((X[Z_dig == i], Y[Z_dig == i])).T, bins=bins)
-
+            outer_pmfXY = np.outer(pmf_X, pmf_Y)
             for j in range(pmf_XY.shape[0]):
                 for k in range(pmf_XY.shape[1]):
-                    cmi[i] += kl_div(pmf_XY[j, k], pmf_X[j] * pmf_Y[k])
+                    cmi[i] += kl_div(pmf_XY[j, k], outer_pmfXY[j, k])
             
         z = 0.5 * (_bins[1:] + _bins[:-1])
 
@@ -1113,9 +1113,10 @@ def conditional_mutual_information(X, Y, Z, bins='fd'):
                 pmf_X, _x = estimate_pmf(X_j[Z_dig == i], bins=bins)
                 pmf_Y, _y = estimate_pmf(Y_j[Z_dig == i], bins=bins)
                 pmf_XY, _xy = estimate_pmf_joint(np.vstack((X_j[Z_dig == i], Y_j[Z_dig == i])).T, bins=bins)
+                outer_pmfXY = np.outer(pmf_X, pmf_Y)
                 for k in range(pmf_XY.shape[0]):
                     for l in range(pmf_XY.shape[1]):
-                        cmi[i, j] += kl_div(pmf_XY[k, l], pmf_X[k] * pmf_Y[l])
+                        cmi[i, j] += kl_div(pmf_XY[k, l], outer_pmfXY[k, l])
 
         z = 0.5 * (_bins[1:] + _bins[:-1])
 
