@@ -18,7 +18,7 @@ def main():
 
     # Define the identifier
     identifier = "motif-b_w-negative-TI"
-    _bins = 50 # 'fd' if you want to use Freedman-Diaconis rule
+    _bins = 20 # 'fd' if you want to use Freedman-Diaconis rule
 
     """Base path."""
     data_basepath = "./data/" + identifier

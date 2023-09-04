@@ -583,17 +583,13 @@ def conditional_correlation(X:np.ndarray, Y:np.ndarray, Z:np.ndarray, bins:str o
         
         # Get the digitised data
         Z_dig = np.digitize(Z, bin_edges_z)
-        
-        # Digitise X and Y
-        X_dig = np.digitize(X, bin_edges_x)
-        Y_dig = np.digitize(Y, bin_edges_y)
 
         # Calculate the conditional correlation
         for j in range(n_bins): # Loop over bins
             if np.sum(Z_dig == j) < 5:
                 cond_corr[j] = np.nan
             else:
-                cond_corr[j] = np.corrcoef(X_dig[Z_dig == j], Y_dig[Z_dig == j])[0, 1]
+                cond_corr[j] = np.corrcoef(X[Z_dig == j], Y[Z_dig == j])[0, 1]
                 cond_corr_stderr[j] = np.sqrt((1 - cond_corr[j]**2) / (np.sum(Z_dig == j) - 2))
         
         # Calculate the bin values
@@ -655,13 +651,13 @@ def conditional_mutual_information(X:np.ndarray, Y:np.ndarray, Z:np.ndarray, bin
 
     if Z.ndim == 2 and Z.shape[0] == 1:
         # Generate the bins
-        bin_edges_x, _ = _generate_bins(X, bins)
-        bin_edges_y, _ = _generate_bins(Y, bins)
+        # bin_edges_x, _ = _generate_bins(X, bins)
+        # bin_edges_y, _ = _generate_bins(Y, bins)
         bin_edges_z, n_bins = _generate_bins(Z, bins)
 
         # Get the digitised data
         Z_dig = np.digitize(Z, bin_edges_z)
-        pmf_Z, _ = estimate_pmf(Z, bins=bins, method=method)
+        pmf_Z, _ = estimate_pmf(Z, bins=bin_edges_z, method=method)
 
         # Initialise the conditional mutual information        
         cmi = np.zeros(n_bins)
@@ -673,11 +669,14 @@ def conditional_mutual_information(X:np.ndarray, Y:np.ndarray, Z:np.ndarray, bin
                 continue
             
             # Estimate the probability mass functions of X and Y
-            pmf_X, _ = estimate_pmf(X[Z_dig == i], bins=bin_edges_x, method=method)
-            pmf_Y, _ = estimate_pmf(Y[Z_dig == i], bins=bin_edges_y, method=method)
+            # pmf_X, _ = estimate_pmf(X[Z_dig == i], bins=bin_edges_x, method=method)
+            # pmf_Y, _ = estimate_pmf(Y[Z_dig == i], bins=bin_edges_y, method=method)
+            pmf_X, _ = estimate_pmf(X[Z_dig == i], bins=bins, method=method)
+            pmf_Y, _ = estimate_pmf(Y[Z_dig == i], bins=bins, method=method)
 
             # Estimate the joint probability mass function of X and Y
-            pmf_XY, _ = estimate_pmf_joint(np.vstack((X[Z_dig == i], Y[Z_dig == i])), bins=[bin_edges_x, bin_edges_y], method=method)
+            # pmf_XY, _ = estimate_pmf_joint(np.vstack((X[Z_dig == i], Y[Z_dig == i])), bins=[bin_edges_x, bin_edges_y], method=method)
+            pmf_XY, _ = estimate_pmf_joint(np.vstack((X[Z_dig == i], Y[Z_dig == i])), bins=bins, method=method)
 
 
             # Generate the outer product of the probability mass functions of X and Y
