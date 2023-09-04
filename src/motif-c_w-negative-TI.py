@@ -18,7 +18,7 @@ def main():
 
     # Define the identifier
     identifier = "motif-c_w-negative-TI"
-    _bins = 20 # 'fd'
+    _bins = 25 # 'fd'
 
     """Base path."""
     data_basepath = "./data/" + identifier

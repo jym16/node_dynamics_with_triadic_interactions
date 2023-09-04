@@ -574,8 +574,6 @@ def conditional_correlation(X:np.ndarray, Y:np.ndarray, Z:np.ndarray, bins:str o
     if Z.ndim == 2 and Z.shape[0] == 1:
         # Generate the bins
         bin_edges_z, n_bins = _generate_bins(Z, bins)
-        bin_edges_x, _ = _generate_bins(X, bins)
-        bin_edges_y, _ = _generate_bins(Y, bins)
 
         # Initialise the conditional correlation
         cond_corr = np.zeros(n_bins)
@@ -586,7 +584,7 @@ def conditional_correlation(X:np.ndarray, Y:np.ndarray, Z:np.ndarray, bins:str o
 
         # Calculate the conditional correlation
         for j in range(n_bins): # Loop over bins
-            if np.sum(Z_dig == j) < 5:
+            if np.sum(Z_dig == j) < n_bins:
                 cond_corr[j] = np.nan
             else:
                 cond_corr[j] = np.corrcoef(X[Z_dig == j], Y[Z_dig == j])[0, 1]
@@ -651,8 +649,6 @@ def conditional_mutual_information(X:np.ndarray, Y:np.ndarray, Z:np.ndarray, bin
 
     if Z.ndim == 2 and Z.shape[0] == 1:
         # Generate the bins
-        # bin_edges_x, _ = _generate_bins(X, bins)
-        # bin_edges_y, _ = _generate_bins(Y, bins)
         bin_edges_z, n_bins = _generate_bins(Z, bins)
 
         # Get the digitised data
@@ -664,18 +660,15 @@ def conditional_mutual_information(X:np.ndarray, Y:np.ndarray, Z:np.ndarray, bin
 
         # Loop over bins
         for i in range(n_bins):
-            if np.sum(Z_dig == i) < 5:
+            if np.sum(Z_dig == i) < n_bins:
                 cmi[i] = np.nan
                 continue
             
             # Estimate the probability mass functions of X and Y
-            # pmf_X, _ = estimate_pmf(X[Z_dig == i], bins=bin_edges_x, method=method)
-            # pmf_Y, _ = estimate_pmf(Y[Z_dig == i], bins=bin_edges_y, method=method)
             pmf_X, _ = estimate_pmf(X[Z_dig == i], bins=bins, method=method)
             pmf_Y, _ = estimate_pmf(Y[Z_dig == i], bins=bins, method=method)
 
             # Estimate the joint probability mass function of X and Y
-            # pmf_XY, _ = estimate_pmf_joint(np.vstack((X[Z_dig == i], Y[Z_dig == i])), bins=[bin_edges_x, bin_edges_y], method=method)
             pmf_XY, _ = estimate_pmf_joint(np.vstack((X[Z_dig == i], Y[Z_dig == i])), bins=bins, method=method)
 
 
