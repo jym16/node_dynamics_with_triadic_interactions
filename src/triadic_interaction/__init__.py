@@ -7,29 +7,21 @@ from triadic_interaction.model import NDwTIs
 from triadic_interaction.computation import (
     create_node_edge_incidence_matrix,
     extract_by_std,
-    pdf_evolution,
     freedman_diaconis_rule,
-    discretise,
     estimate_pdf,
     estimate_pdf_joint,
-    estimate_pdf_conditional,
-    entropy,
-    entropy_joint,
-    conditional_mutual_information,
+    estimate_pmf,
+    estimate_pmf_joint,
     covariance,
-    conditional_expectation,
-    conditional_variance,
-    conditional_covariance,
-    conditional_correlation
+    conditional_correlation,
+    conditional_mutual_information
 )
 from triadic_interaction.visualization import (
     plot_timeseries,
     plot_pdf,
     plot_covariance,
-    plot_conditional_expectation,
     plot_conditional_correlation,
-    plot_conditional_mutual_information,
-    visualise_evolution
+    plot_conditional_mutual_information
 )
 
 __all__ = [
@@ -39,29 +31,21 @@ __all__ = [
     ### Computation ###
     'create_node_edge_incidence_matrix',
     'extract_by_std',
-    'pdf_evolution',
     'freedman_diaconis_rule',
-    'discretise',
     'estimate_pdf',
     'estimate_pdf_joint',
-    'estimate_pdf_conditional',
-    'entropy',
-    'entropy_joint',
-    'conditional_mutual_information',
+    'estimate_pmf',
+    'estimate_pmf_joint',
     'covariance',
-    'conditional_expectation',
-    'conditional_variance',
-    'conditional_covariance',
     'conditional_correlation',
+    'conditional_mutual_information',
 
     ### Visualization ###
     'plot_timeseries',
     'plot_pdf',
     'plot_covariance',
-    'plot_conditional_expectation',
     'plot_conditional_correlation',
     'plot_conditional_mutual_information',
-    'visualise_evolution',
 ]
 
 """End of file."""

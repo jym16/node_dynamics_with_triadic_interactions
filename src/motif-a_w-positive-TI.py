@@ -26,7 +26,6 @@ def main():
 
     """Data filepaths."""
     data_timeseries = os.path.join(data_basepath, "{}_timeseries.npy".format(identifier))
-    data_p_evolution = os.path.join(data_basepath, "{}_p_evolution.npy".format(identifier))
     data_cond_corr_123 = os.path.join(data_basepath, "{}_cond_corr_123_{}bins.npy".format(identifier, _bins))
     data_cond_corr_123_x = os.path.join(data_basepath, "{}_cond_corr_123_x_{}bins.npy".format(identifier, _bins))
     data_cond_corr_123_stderr = os.path.join(data_basepath, "{}_cond_corr_123_stderr_{}bins.npy".format(identifier, _bins))
@@ -47,7 +46,6 @@ def main():
     fig_timeseries = os.path.join(fig_basepath, "{}_timeseries.pdf".format(identifier))
     fig_px = os.path.join(fig_basepath, "{}_probability_distribution_{}bins.pdf".format(identifier, _bins))
     fig_px_log = os.path.join(fig_basepath, "{}_probability_distribution_log_{}bins.pdf".format(identifier, _bins))
-    fig_p_evolution = os.path.join(fig_basepath, "{}_p_evolution.pdf".format(identifier))
     fig_cov = os.path.join(fig_basepath, "{}_covariance.pdf".format(identifier))
     fig_cond_corr = os.path.join(fig_basepath, "{}_cond_corr_{}bins.pdf".format(identifier, _bins))
     fig_cond_corr_stderr = os.path.join(fig_basepath, "{}_cond_corr_stderr_{}bins.pdf".format(identifier, _bins))
@@ -143,21 +141,6 @@ def main():
         n_samples=3, 
         separate=True
     )
-
-    n_x_resolution = _bins
-    X_max_amp = np.max(np.abs(X)) * 1.5
-    X_bins = np.linspace(-X_max_amp, X_max_amp, n_x_resolution+1)
-    time_grid = np.linspace(0, t_max, int(t_max / dt + 1))
-
-    time_evolution = np.zeros((n_nodes, n_x_resolution, n_timesteps))
-    for i in range(n_nodes):
-        for t in range(n_timesteps):
-            p_t, _ = estimate_pdf(X[i, t, :], bins=X_bins)
-            assert(1 - np.sum(p_t) < 1e-10)
-            time_evolution[i, :, t] = p_t
-    np.save(data_p_evolution, time_evolution)
-
-    visualise_evolution(time_evolution, X_bins, time_grid, fig_p_evolution)
 
     # Trim the timeseries (for stationary distribution)
     X = X[:, t0:, :]
@@ -318,11 +301,12 @@ def main():
         CMI23_1 = np.load(data_cmi_231)
         Xgrid23_1 = np.load(data_cmi_231_x)
     else:
-        CMI23_1, Xgrid23_1 = conditional_mutual_information(
+        CMI23_1, _, Xgrid23_1 = conditional_mutual_information(
             X=X[1].flatten(),
             Y=X[2].flatten(),
             Z=X[0].flatten(), 
-            bins=_bins
+            bins=_bins,
+            method='kde'
         )
         np.save(
             data_cmi_231, 
@@ -336,11 +320,12 @@ def main():
         CMI13_2 = np.load(data_cmi_132)
         Xgrid13_2 = np.load(data_cmi_132_x)
     else:
-        CMI13_2, Xgrid13_2 = conditional_mutual_information(
+        CMI13_2, _, Xgrid13_2 = conditional_mutual_information(
             X=X[0].flatten(),
             Y=X[2].flatten(),
             Z=X[1].flatten(), 
-            bins=_bins
+            bins=_bins,
+            method='kde'
         )
         np.save(
             data_cmi_132, 
@@ -354,11 +339,12 @@ def main():
         CMI12_3 = np.load(data_cmi_123)
         Xgrid12_3 = np.load(data_cmi_123_x)
     else:
-        CMI12_3, Xgrid12_3 = conditional_mutual_information(
+        CMI12_3, _, Xgrid12_3 = conditional_mutual_information(
             X=X[0].flatten(),
             Y=X[1].flatten(),
             Z=X[2].flatten(), 
-            bins=_bins
+            bins=_bins,
+            method='kde'
         )
         np.save(
             data_cmi_123, 

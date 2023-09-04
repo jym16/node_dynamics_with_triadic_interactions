@@ -6,7 +6,6 @@ This module contains functions for visualizing the results of the node dynamics 
 
 # Import necessary packages
 import matplotlib.pyplot as plt
-from matplotlib import colors
 import numpy as np
 import types
 
@@ -55,7 +54,7 @@ MPL_CONFIG = {
     'mathtext.default' : 'regular',     # specify mathtext font
 }
 
-def plot_timeseries(X, output_file, t_max, n_samples=1, separate=False, theory=None):
+def plot_timeseries(X:np.ndarray, output_file:str, t_max:float, n_samples:int=1, separate:bool=False, theory=None):
     """Plot the timeseries.
 
     Parameters
@@ -127,7 +126,6 @@ def plot_timeseries(X, output_file, t_max, n_samples=1, separate=False, theory=N
     
     # If separate, plot each node in a separate figure
     else:
-
         # Create a figure
         fig, ax = plt.subplots(
             nrows=n_nodes, 
@@ -182,7 +180,7 @@ def plot_timeseries(X, output_file, t_max, n_samples=1, separate=False, theory=N
     # Close the figure
     plt.close(fig)
 
-def plot_pdf(probs, bins, output_file, f_theory=None, logscale=False, parallel=False):
+def plot_pdf(probs:list, bins:list, output_file:str, f_theory=None, logscale:bool=False, parallel:bool=False):
     """Plot the probability distributions.
 
     Parameters
@@ -377,7 +375,7 @@ def plot_pdf(probs, bins, output_file, f_theory=None, logscale=False, parallel=F
     # Close the figure
     plt.close(fig)
 
-def plot_covariance(cov, output_file, theory=None):
+def plot_covariance(cov:np.ndarray, output_file:str, theory=None):
     """Plot the covariance matrix.
 
     Parameters
@@ -525,145 +523,7 @@ def plot_covariance(cov, output_file, theory=None):
     # Close the figure
     plt.close(fig)
 
-def plot_conditional_expectation(Xgrids, cond_exps, stds, orders, output_file=None, theory=None):
-    """Plot the conditional expectation.
-    
-    Parameter
-    ---------
-    Xgrids : numpy.ndarray of shape (n_bins,) or list of numpy.ndarray of shape (n_bins,)
-        The grid of the conditional variable.
-    cond_exps : numpy.ndarray of shape (n_bins, n_samples) or list of numpy.ndarray of shape (n_bins, n_samples)
-        The conditional expectations.
-    std : numpy.ndarray of shape (n_bins, n_samples) or list of numpy.ndarray of shape (n_bins, n_samples)
-        The standard deviation of the conditional expectations.
-    orders : tuples or list of tuples
-        The order of the nodes.
-    output_file : str, optional
-        The output file name.
-    theory : function or list of functions, optional
-            (Default value = None)
-        The theoretical solutions.
-
-    Returns
-    -------
-    None
-
-    """
-    # Set the style of the plot
-    plt.rcParams.update(MPL_CONFIG)
-
-    # If the input is an array
-    if isinstance(Xgrids, list):
-        # Set the number of columns
-        n_cols = len(Xgrids)
-
-        # Create a figure
-        fig, ax = plt.subplots(
-            nrows=2, 
-            ncols=n_cols, 
-            figsize=(2.5 * n_cols, 5)
-        ) # sharex=True
-
-        # Plot the conditional expectation
-        for i in range(n_cols):
-            for j in range(2):
-                # Plot the conditional expectation and its standard deviation
-                ax[j, i].scatter(
-                    Xgrids[i], 
-                    cond_exps[i][j], 
-                    marker='o',
-                    edgecolors='r',
-                    facecolors='none'
-                )
-                ax[j, i].errorbar(
-                    Xgrids[i], 
-                    cond_exps[i][j], 
-                    yerr=stds[i][j] / np.sqrt(stds[i][j].shape[0]),
-                    fmt='none', 
-                    color='r', 
-                    ecolor='r', 
-                    elinewidth=1, 
-                    capsize=2, 
-                    alpha=0.5
-                )
-
-                # Set the labels
-                ax[j, i].set_ylabel(
-                    '$\mathbb{E}$' + '$[X_{} \mid X_{}]$'.format(orders[i][j], orders[i][2])
-                )
-
-                if theory is not None:
-                    # Plot the theoretical solution
-                    ax[j, i].plot(
-                        Xgrids[i], 
-                        theory[i][j](Xgrids[i]), 
-                        "k--",
-                        label='no TI'
-                    )
-                    # Set the legend
-                    ax[j, i].legend()
-
-            # Set the x-axis
-            ax[-1, i].set_xlabel(
-                '$X_{}$'.format(orders[i][2])
-            )
-    
-    # If the input is an array
-    else:
-        # Create a figure
-        fig, ax = plt.subplots(
-            ncols=2, 
-            figsize=(6, 3), 
-            sharex=True
-        )
-        # Plot the conditional expectation
-        for i in range(2):
-            # Plot the conditional expectation and its standard deviation
-            ax[i].scatter(
-                Xgrids, cond_exps[i], 
-                yerr=stds[i], 
-                marker='o',
-                facecolors='none',
-                edgecolors='r'
-            )
-            ax[i].errorbar(
-                Xgrids, cond_exps[i], 
-                yerr=stds[i] / np.sqrt(stds.shape[1]), 
-                fmt='o', 
-                color='r', 
-                ecolor='r', 
-                elinewidth=1, 
-                capsize=2, 
-                alpha=0.5
-            )
-
-            # Set the x-labels
-            ax[i].set_xlabel('$X_{}$'.format(orders[2]))
-
-            # Set the y-labels
-            ax[i].set_ylabel('$\mathbb{E}$' + '$[X_{} \mid X_{}]$'.format(orders[i], orders[2]))
-        
-            # Plot the theoretical solution
-            if theory is not None:
-                ax[i].plot(
-                    Xgrids, 
-                    theory[i](Xgrids), 
-                    color='k--', 
-                    label='no TI'
-                )
-                # Set the legend
-                ax[i].legend()
-        
-    # Apply the layout
-    fig.tight_layout()
-
-    # Save the figure
-    fig.savefig(output_file)
-
-    # Close the figure
-    plt.close(fig)
-
-def plot_conditional_correlation(Xgrids, cond_corr, order, output_file, std=False, Xrange=None, theory=None, f_supplement=None, threshold=None):
+def plot_conditional_correlation(Xgrids:np.ndarray or list, cond_corr:np.ndarray or list, order:tuple or list, output_file:str, std:bool or list=False, Xrange:tuple or list=None, theory=None, f_supplement=None, threshold:float or list=None):
     """Plot the conditional correlation.
     
     Parameter
@@ -690,7 +550,7 @@ def plot_conditional_correlation(Xgrids, cond_corr, order, output_file, std=Fals
     f_supplement : function or list of functions, optional
             (default value = None)
         The supplementary functions.
-    threshold : list of float, optional
+    threshold : float or list of float, optional
             (default value = None)
         The threshold value
     Returns
@@ -712,11 +572,16 @@ def plot_conditional_correlation(Xgrids, cond_corr, order, output_file, std=Fals
             Xmin = [Xrange[i][0] for i in range(n_data)]
             Xmax = [Xrange[i][1] for i in range(n_data)]
         
-        # Ymin = [theory[i](0) - 0.5 for i in range(n_data)]
-        # Ymax = [theory[i](0) + 0.5 for i in range(n_data)]
-        Ymin = [-1 for i in range(n_data)]
-        Ymax = [1 for i in range(n_data)]
-        
+        # Ymin = [-1 for i in range(n_data)]
+        # Ymax = [1 for i in range(n_data)]
+        Ymin = [
+            0.8 * min(np.nanmin(theory[i](Xgrids[i])), np.nanmin(cond_corr[i][(cond_corr[i] != -np.inf) & (Xgrids[i] >= Xmin[i]) & (Xgrids[i] <= Xmax[i])])) - 0.1
+            for i in range(n_data)
+        ]
+        Ymax = [
+            1.2 * max(np.nanmax(theory[i](Xgrids[i])), np.nanmax(cond_corr[i][(cond_corr[i] != np.inf) & (Xgrids[i] >= Xmin[i]) & (Xgrids[i] <= Xmax[i])])) + 0.1
+            for i in range(n_data)
+        ]
          
         # Create a figure
         fig, ax = plt.subplots(
@@ -822,7 +687,7 @@ def plot_conditional_correlation(Xgrids, cond_corr, order, output_file, std=Fals
                 ax[i].axvline(threshold, linestyle=':', color='k')
 
             # Set the legend
-            ax[i].legend(loc='lower right')
+            ax[i].legend(loc='best')
             
             # Set the labels
             ax[i].set_xlabel(
@@ -895,6 +760,8 @@ def plot_conditional_correlation(Xgrids, cond_corr, order, output_file, std=Fals
         ax.set_ylabel(
             r'$\rho(X_{}, X_{} \mid X_{})$'.format(order[0], order[1], order[2])
         )
+        if threshold is not None:
+            ax.axvline(threshold, linestyle=':', color='k')
 
     # Apply the layout
     fig.tight_layout()
@@ -905,14 +772,14 @@ def plot_conditional_correlation(Xgrids, cond_corr, order, output_file, std=Fals
     # Close the figure
     plt.close(fig)
 
-def plot_conditional_mutual_information(Xgrids, cmi, order, output_file, std=False, Xrange=None, theory=None):
+def plot_conditional_mutual_information(Xgrids:np.ndarray or list, cmi:np.ndarray or list, order:tuple or list, output_file:str, std:bool or list=False, Xrange:tuple or list=None, theory=None):
     """Plot conditional mutual information.
     
     Parameter
     ---------
     Xgrids : numpy.ndarray of shape (n_bins,) or list of numpy.ndarray of shape (n_bins,)
         The grid of the conditional variable.
-    cmi : numpy.ndarray of shape (n_bins, n_samples) or list of numpy.ndarray of shape (n_bins, n_samples)
+    cmi : numpy.ndarray of shape (n_bins, ) or list of numpy.ndarray of shape (n_bins, )
         The conditional mutual information.
     order : tuples or list of tuples
         The order of the nodes.
@@ -953,12 +820,12 @@ def plot_conditional_mutual_information(Xgrids, cmi, order, output_file, std=Fal
             nrows=1, 
             ncols=len(Xgrids), 
             figsize=(len(Xgrids)*2.5, 2.5),
-            sharey=True
+            # sharey=True
         )
 
         # Plot the conditional mutual information
         for i in range(len(Xgrids)):
-            if len(cmi[i].shape) > 1:
+            if cmi[i].ndim > 1:
                 cmi_mean = np.mean(
                     cmi[i], 
                     axis=1
@@ -989,8 +856,8 @@ def plot_conditional_mutual_information(Xgrids, cmi, order, output_file, std=Fal
                     )
             else:
                 ax[i].scatter(
-                    Xgrids[i], 
-                    cmi[i], 
+                    Xgrids[i][(Xgrids[i] >= Xmin[i]) & (Xgrids[i] <= Xmax[i])], 
+                    cmi[i][(Xgrids[i] >= Xmin[i]) & (Xgrids[i] <= Xmax[i])], 
                     edgecolor='r',
                     facecolor='none',
                     # s=1
@@ -1000,22 +867,24 @@ def plot_conditional_mutual_information(Xgrids, cmi, order, output_file, std=Fal
             if theory is not None:
                 # Plot the theoretical solution
                 ax[i].plot(
-                    Xgrids[i], 
-                    theory[i](Xgrids[i]), 
+                    Xgrids[i][(Xgrids[i] >= Xmin[i]) & (Xgrids[i] <= Xmax[i])], 
+                    theory[i](Xgrids[i][(Xgrids[i] >= Xmin[i]) & (Xgrids[i] <= Xmax[i])]), 
                     'k--', 
                     label='no TI'
                 )
                 # Set the legend
                 ax[i].legend()
-         
+
+
+
             ax[i].set_xlim(
                 Xmin[i],
                 Xmax[i]
             )
 
             # ax[i].set_ylim(
-            #     min(np.min(theory[i](Xgrids[i])), np.min(cmi[i][(Xgrids[i] >= Xmin[i]) & (Xgrids[i] <= Xmax[i])])) - 0.1,
-            #     max(np.max(theory[i](Xgrids[i])), np.max(cmi[i][(Xgrids[i] >= Xmin[i]) & (Xgrids[i] <= Xmax[i])])) + 0.1
+            #     min(np.min(theory[i](Xgrids[i])), np.min(cmi[i][(cmi[i] != -np.inf) & (Xgrids[i] >= Xmin[i]) & (Xgrids[i] <= Xmax[i])])) - 0.1,
+            #     max(np.max(theory[i](Xgrids[i])), np.max(cmi[i][(cmi[i] != np.inf) & (Xgrids[i] >= Xmin[i]) & (Xgrids[i] <= Xmax[i])])) + 0.1
             # )
             
             # Set the labels
@@ -1061,10 +930,10 @@ def plot_conditional_mutual_information(Xgrids, cmi, order, output_file, std=Fal
             Xmax
         )
 
-        ax.set_ylim(
-            .75 * min(np.min(theory(Xgrids)), np.min(cmi[(Xgrids >= Xmin) & (Xgrids <= Xmax)])),
-            1.25 * max(np.max(theory(Xgrids)), np.max(cmi[(Xgrids >= Xmin) & (Xgrids <= Xmax)]))
-        )
+        # ax.set_ylim(
+        #     min(np.min(theory(Xgrids)), np.min(cmi[(Xgrids >= Xmin) & (Xgrids <= Xmax)])),
+        #     max(np.max(theory(Xgrids)), np.max(cmi[(Xgrids >= Xmin) & (Xgrids <= Xmax)]))
+        # )
         
         # Set the labels
         ax.set_xlabel(
@@ -1082,76 +951,5 @@ def plot_conditional_mutual_information(Xgrids, cmi, order, output_file, std=Fal
     
     # Close the figure
     plt.close(fig)
-
-def visualise_evolution(evolution_data, x_grid, time_grid, output_file):
-    """Visualise the evolution of probability density function.
-
-    Parameters
-    ----------
-    evolution_data : numpy.ndarray of shape (n_nodes, n_bins, n_times)
-        The evolution of probability density function.
-    x_grid : numpy.ndarray of shape (n_bins,)
-        The grid of the variable.
-    time_grid : numpy.ndarray of shape (n_times,)
-        The time grid.
-    output_file : str
-        The output file name.
-    
-    Returns
-    -------
-    None
-
-    """
-    # Set the style of the plot
-    plt.rcParams.update(MPL_CONFIG)
-
-    # plt.rcParams.update({
-    #     'xtick.direction' : 'out',
-    #     'xtick.top' : False,
-    #     'ytick.direction' : 'out',
-    #     'ytick.right' : False,
-    # })
-
-    norm = colors.LogNorm(
-        vmin=np.min(evolution_data[evolution_data > 0.]), 
-        vmax=np.max(evolution_data)
-    )
-
-    fig, ax = plt.subplots(nrows=3, figsize=(3,3.3))
-    n_nodes = evolution_data.shape[0]
-
-    for i in range(n_nodes):
-        cax = ax[i].imshow(
-            evolution_data[i], 
-            cmap='inferno', 
-            interpolation='none', 
-            aspect='auto',
-            norm=norm,
-            extent=[
-                np.min(time_grid), np.max(time_grid),
-                np.min(x_grid), np.max(x_grid),
-            ]
-        )
-        ax[i].set_ylabel("$X_{k}$".format(k=i+1))
-        
-        # ax[i].set_facecolor('k')
-    
-    cbar_ax = fig.add_axes([0.92, 0.12, 0.03, 0.75])
-    # cbar_ax.set_visible(False)
-
-    plt.colorbar(
-        ax[2].get_images()[0], 
-        cax=cbar_ax, 
-        label='PDF $p(X_i, t)$', 
-        orientation='vertical'
-    )
-
-    # ax[0].set_yticklabels(time_grid)
-    ax[2].set_xlabel("$t$")
-
-    # fig.tight_layout()
-    
-    # fig.tight_layout()
-    fig.savefig(output_file)
 
 """End of file"""
