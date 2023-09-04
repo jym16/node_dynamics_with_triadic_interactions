@@ -31,33 +31,25 @@ Functions
 
   ``extract_by_std(X, std=3.0)`` : Extract the data within a given number of standard deviations from its mean.
 
-  ``freedman_diaconis_rule(data, power=1. / 3., factor=2., trim=1)`` : Compute the number of bins using the Freedman-Diaconis rule.
+  ``freedman_diaconis_rule(data, power=1. / 3., factor=2.)`` : Compute the number of bins using the Freedman-Diaconis rule.
 
-  ``discretise(X, n_bins='fd')`` : Discretise the time series data.
+  ``_check_data_shape(data)`` : Check the shape of the data.
 
-  ``estimate_pdf(data, bins='fd')`` : Estimate the probability density function.
+  ``_generate_bins(data, bins)`` : Generate the bins.
+
+  ``estimate_pdf(data, bins='fd', method='kde')`` : Estimate the probability density function.
   
-  ``estimate_pdf_joint(data, bins='fd')`` : Estimate the joint probability density function.
-  
-  ``estimate_pdf_conditional(data, data_cond, val_cond, bins='fd')`` : Estimate the conditional probability density function.
-  
-  ``pdf_evolution(X, t_max, n_x_resolution=50)`` : Compute the evolution of the probability density function.
+  ``estimate_pdf_joint(data, bins='fd', method='kde')`` : Estimate the joint probability density function.
+
+  ``estimate_pmf(data, bins='fd', method='kde')`` : Estimate the probability mass function.
+
+  ``estimate_pmf_joint(data, bins='fd', method='kde')`` : Estimate the joint probability mass function.
   
   ``covariance(data)`` : Compute the covariance.
   
-  ``conditional_expectation(X, Y, Z, bins='fd')`` : Compute the conditional expectation.
-  
-  ``conditional_variance(X, Z, bins='fd')`` : Compute the conditional variance.
-  
-  ``conditional_covariance(X, Y, Z, bins='fd')`` : Compute the conditional covariance.
-  
-  ``conditional_correlation(X, Y, Z, bins='fd', method='default')`` : Compute the conditional correlation.
-  
-  ``entropy(pdf, x)`` : Compute the entropy.
-  
-  ``entropy_joint(pdf_joint, x)`` : Compute the joint entropy.
-  
-  ``conditional_mutual_information(X, Y, Z, bins='fd')`` : Compute the conditional mutual information.
+  ``conditional_correlation(X, Y, Z, bins='fd')`` : Compute the conditional correlation.
+    
+  ``conditional_mutual_information(X, Y, Z, bins='fd', method='kde')`` : Compute the conditional mutual information.
 
 ``triadic_interactions.computation`` : 
 
@@ -67,13 +59,9 @@ Functions
 
   ``plot_covariance(cov, output_file, theory=None)`` : Plot the covariance matrix.
 
-  ``plot_conditional_expectation(Xgrids, cond_exps, stds, orders, output_file=None, theory=None)`` : Plot the conditional expectation.
-
   ``plot_conditional_correlation(Xgrids, cond_corr, order, output_file, std=False, Xrange=None, theory=None, f_supplement=None, threshold=None)`` : Plot the conditional correlation.
 
-  ``plot_conditional_mutual_information(Xgrids, cmi, order, output_file, std=False, theory=None)`` : Plot conditional mutual information.
-
-  ``visualise_evolution(evolution_data, x_grid, time_grid, output_file)`` : Visualise the time evolution of the probability density function.
+  ``plot_conditional_mutual_information(Xgrids, cmi, order, output_file, std=False, Xrange=None, theory=None)`` : Plot conditional mutual information.
 
 Examples
 --------
@@ -105,4 +93,3 @@ Acknowledgements
 The author would like to thank Prof. Dr. Ginestra Bianconi for her guidance and support throughout the project.
 
 The author also received assistance from Dr. Anthony Baptista in implementing the ``create_node_edge_incidence_matrix`` function in ``triadic_interaction.computation`` and the ``NDwTIs`` class in ``triadic_interaction.model``.
-
