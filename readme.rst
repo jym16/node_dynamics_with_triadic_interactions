@@ -44,12 +44,14 @@ Functions
   ``estimate_pmf(data, bins='fd', method='kde')`` : Estimate the probability mass function.
 
   ``estimate_pmf_joint(data, bins='fd', method='kde')`` : Estimate the joint probability mass function.
+
+  ``estimate_mutual_information(X, Y, bins='fd', pmf_method='kde', method='kl-div')`` : Estimate the mutual information.
   
   ``covariance(data)`` : Compute the covariance.
   
   ``conditional_correlation(X, Y, Z, bins='fd')`` : Compute the conditional correlation.
     
-  ``conditional_mutual_information(X, Y, Z, bins='fd', method='kde')`` : Compute the conditional mutual information.
+  ``conditional_mutual_information(X, Y, Z, bins='fd', pmf_method='kde', method='kl-div')`` : Compute the conditional mutual information.
 
 ``triadic_interactions.computation`` : 
 
