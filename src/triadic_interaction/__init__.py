@@ -12,6 +12,7 @@ from triadic_interaction.computation import (
     estimate_pdf_joint,
     estimate_pmf,
     estimate_pmf_joint,
+    estimate_mutual_information,
     covariance,
     conditional_correlation,
     conditional_mutual_information
@@ -36,6 +37,7 @@ __all__ = [
     'estimate_pdf_joint',
     'estimate_pmf',
     'estimate_pmf_joint',
+    'estimate_mutual_information',
     'covariance',
     'conditional_correlation',
     'conditional_mutual_information',

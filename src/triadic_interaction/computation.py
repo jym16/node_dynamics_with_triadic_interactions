@@ -325,6 +325,11 @@ def estimate_pdf(data:np.ndarray, bins:str or int or np.ndarray='fd', method:str
         # Calculate the probability density function
         pdf = kernel(x)
     
+    else:
+        raise ValueError(
+            "Invalid method: method must be either 'hist' or 'kde'."
+        )
+    
     return pdf, x
 
 def estimate_pdf_joint(data:np.ndarray, bins:str or np.ndarray or int or list or tuple='fd', method:str='kde'):
@@ -353,7 +358,7 @@ def estimate_pdf_joint(data:np.ndarray, bins:str or np.ndarray or int or list or
         The estimated probability density function.
     x : list of numpy.ndarray of shape (n_bins_{i},) [i = 1, ..., n_variables]
         The x values of the corresponding bins.
-    
+        
     """
     # Check the shape of the data
     _check_data_shape(data)
@@ -400,7 +405,9 @@ def estimate_pdf_joint(data:np.ndarray, bins:str or np.ndarray or int or list or
         pdf_joint = kernel(x_eval).reshape(grid[0].shape)
     
     else:
-        raise ValueError('Invalid method.')
+        raise ValueError(
+            "Invalid method: method must be either 'hist' or 'kde'."
+        )
     
     return pdf_joint, x
 
@@ -495,6 +502,87 @@ def estimate_pmf_joint(data:np.ndarray, bins:str or np.ndarray or int or list or
     pmf_joint = pdf_joint / np.sum(pdf_joint)
     
     return pmf_joint, x
+
+def estimate_mutual_information(X:np.ndarray, Y:np.ndarray, bins:str or int='fd', pmf_method:str='kde', method:str='kl-div'):
+    """Calculate the mutual information between X and Y.
+
+    Parameters
+    ----------
+    X : numpy.ndarray of shape (n_observations,) or (1, n_observations)
+        The data.
+    Y : numpy.ndarray of shape (n_observations,) or (1, n_observations)
+        The data.
+    bins : str or a sequence of int or int, optional
+        (default = None)
+        The number of bins or the method to compute the number of bins.
+        - 'fd' : The number of bins is computed using the Freedman-Diaconis rule.
+        - n : The number of bins for the variable. 
+    pmf_method : str, optional
+        (default = 'kde')
+        The method to estimate the probability mass function.
+        - 'hist' : The probability density function is estimated by the histogram method.
+        - 'kde' : The probability density function is estimated by the kernel density estimation.
+    method : str, optional
+        (default = 'kl-div')
+        The method to estimate the mutual information.
+        - 'kl-div' : The mutual information is calculated by the Kullback-Leibler divergence.
+        - 'entropy' : The mutual information is calculated from entropies.
+    
+    Returns
+    -------
+    mi : float
+        The mutual information between X and Y.
+    
+    """
+
+    # Check the shape of the data
+    _check_data_shape(X)
+    _check_data_shape(Y)
+
+    if X.shape != Y.shape:
+        raise ValueError(
+            'The shape of X and Y must be equal.'
+        )
+    
+    # Shape the data
+    X = np.atleast_2d(X)
+    Y = np.atleast_2d(Y)
+    
+    # Initialise the mutual information
+    mi = 0.
+
+    # Estimate the probability mass functions of X and Y
+    pmf_X, _ = estimate_pmf(X, bins=bins, method=pmf_method)
+    pmf_Y, _ = estimate_pmf(Y, bins=bins, method=pmf_method)
+
+    # Estimate the joint probability mass function of X and Y
+    pmf_XY, _ = estimate_pmf_joint(np.vstack((X, Y)), bins=bins, method=pmf_method)
+
+
+    if method == 'kl-div':
+        # Generate the outer product of the probability mass functions of X and Y
+        outer_pmfXY = np.outer(pmf_X, pmf_Y)
+
+        # Calculate the conditional mutual information
+        for j in range(pmf_X.shape[0]): # Loop over X
+            for k in range(pmf_Y.shape[0]): # Loop over Y
+                mi += kl_div(pmf_XY[k, j], outer_pmfXY[j, k])
+    
+    elif method == 'entropy':
+        # Calculate the entropies
+        H_X = sps.entropy(pmf_X)
+        H_Y = sps.entropy(pmf_Y)
+        H_XY = sps.entropy(pmf_XY.flatten())
+
+        # Calculate the mutual information
+        mi = H_XY - H_X - H_Y
+
+    else:
+        raise ValueError(
+            "Invalid method: method must be either 'kl-div' or 'entropy'."
+        )
+
+    return mi
 
 def covariance(data:np.ndarray):
     """Calculate the covariance matrix.
@@ -600,7 +688,7 @@ def conditional_correlation(X:np.ndarray, Y:np.ndarray, Z:np.ndarray, bins:str o
     
     return cond_corr, z, cond_corr_stderr
 
-def conditional_mutual_information(X:np.ndarray, Y:np.ndarray, Z:np.ndarray, bins:str or int='fd', method:str='kde'):
+def conditional_mutual_information(X:np.ndarray, Y:np.ndarray, Z:np.ndarray, bins:str or int='fd', pmf_method:str='kde', method:str='kl-div'):
     """Calculate the conditional mutual information between X and Y given Z.
 
     Parameters
@@ -617,12 +705,17 @@ def conditional_mutual_information(X:np.ndarray, Y:np.ndarray, Z:np.ndarray, bin
         - 'fd' : The number of bins is computed using the Freedman-Diaconis rule.
         - n_1, n_2, ..., n_n : The number of bins for each variable.
         - n : The number of bins for all variables.
-    method : str, optional
+    pmf_method : str, optional
         (default = 'kde')
-        The method to estimate the probability density function.
+        The method to estimate the probability mass function.
         - 'hist' : The probability density function is estimated by the histogram method.
         - 'kde' : The probability density function is estimated by the kernel density estimation.
-    
+    method : str, optional
+        (default = 'kl-div')
+        The method to estimate the mutual information.
+        - 'kl-div' : The mutual information is calculated by the Kullback-Leibler divergence.
+        - 'entropy' : The mutual information is calculated from entropies.
+
     Returns
     -------
     cmi : numpy.ndarray of shape (n_bins,)
@@ -653,7 +746,7 @@ def conditional_mutual_information(X:np.ndarray, Y:np.ndarray, Z:np.ndarray, bin
 
         # Get the digitised data
         Z_dig = np.digitize(Z, bin_edges_z)
-        pmf_Z, _ = estimate_pmf(Z, bins=bin_edges_z, method=method)
+        pmf_Z, _ = estimate_pmf(Z, bins=bin_edges_z, method=pmf_method)
 
         # Initialise the conditional mutual information        
         cmi = np.zeros(n_bins)
@@ -662,23 +755,14 @@ def conditional_mutual_information(X:np.ndarray, Y:np.ndarray, Z:np.ndarray, bin
         for i in range(n_bins):
             if np.sum(Z_dig == i) < n_bins:
                 cmi[i] = np.nan
-                continue
-            
-            # Estimate the probability mass functions of X and Y
-            pmf_X, _ = estimate_pmf(X[Z_dig == i], bins=bins, method=method)
-            pmf_Y, _ = estimate_pmf(Y[Z_dig == i], bins=bins, method=method)
-
-            # Estimate the joint probability mass function of X and Y
-            pmf_XY, _ = estimate_pmf_joint(np.vstack((X[Z_dig == i], Y[Z_dig == i])), bins=bins, method=method)
-
-
-            # Generate the outer product of the probability mass functions of X and Y
-            outer_pmfXY = np.outer(pmf_X, pmf_Y)
-
-            # Calculate the conditional mutual information
-            for j in range(pmf_XY.shape[0]): # Loop over X
-                for k in range(pmf_XY.shape[1]): # Loop over Y
-                    cmi[i] += kl_div(pmf_XY[j, k], outer_pmfXY[j, k])
+            else:
+                cmi[i] = estimate_mutual_information(
+                    X[Z_dig == i], 
+                    Y[Z_dig == i], 
+                    bins=bins, 
+                    pmf_method=pmf_method, 
+                    method=method
+                )
             
         # Calculate the bin values
         z = 0.5 * (bin_edges_z[1:] + bin_edges_z[:-1])

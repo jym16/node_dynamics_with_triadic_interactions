@@ -307,7 +307,8 @@ def main():
             Y=X[2].flatten(),
             Z=X[0].flatten(), 
             bins=_bins,
-            method='kde'
+            pmf_method='kde',
+            method='kl-div'
         )
         np.save(
             data_cmi_231, 
@@ -326,7 +327,8 @@ def main():
             Y=X[2].flatten(),
             Z=X[1].flatten(), 
             bins=_bins,
-            method='kde'
+            pmf_method='kde',
+            method='kl-div'
         )
         np.save(
             data_cmi_132, 
@@ -345,7 +347,8 @@ def main():
             Y=X[1].flatten(),
             Z=X[2].flatten(), 
             bins=_bins,
-            method='kde'
+            pmf_method='kde',
+            method='kl-div'
         )
         np.save(
             data_cmi_123, 
