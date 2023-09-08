@@ -12,7 +12,7 @@ def main():
     identifiers = [m + '_' +  s for m in motifs for s in signs]
     _bins = 25 # 'fd' if you want to use Freedman-Diaconis rule
 
-    output_file = "./figure/comparison_cond_corr.pdf"
+    output_file = "./figure/comparison_cmi.pdf"
 
     """Base paths."""
     data_basepaths = ["./data/" + id for id in identifiers]
@@ -22,28 +22,28 @@ def main():
         os.path.join(path, "{}_timeseries.npy".format(id)) 
         for path, id in zip(data_basepaths, identifiers)
     ]
-    data_cond_corr_123 = [
-        os.path.join(path, "{}_cond_corr_123_{}bins.npy".format(id, _bins)) 
+    data_cmi_123 = [
+        os.path.join(path, "{}_cmi_123_{}bins.npy".format(id, _bins)) 
         for path, id in zip(data_basepaths, identifiers)
     ]
-    data_cond_corr_123_x = [
-        os.path.join(path, "{}_cond_corr_123_x_{}bins.npy".format(id, _bins)) 
+    data_cmi_123_x = [
+        os.path.join(path, "{}_cmi_123_x_{}bins.npy".format(id, _bins)) 
         for path, id in zip(data_basepaths, identifiers)
     ]
-    data_cond_corr_132 = [
-        os.path.join(path, "{}_cond_corr_132_{}bins.npy".format(id, _bins)) 
+    data_cmi_132 = [
+        os.path.join(path, "{}_cmi_132_{}bins.npy".format(id, _bins)) 
         for path, id in zip(data_basepaths, identifiers)
     ]
-    data_cond_corr_132_x = [
-        os.path.join(path, "{}_cond_corr_132_x_{}bins.npy".format(id, _bins))
+    data_cmi_132_x = [
+        os.path.join(path, "{}_cmi_132_x_{}bins.npy".format(id, _bins))
         for path, id in zip(data_basepaths, identifiers)
     ]
-    data_cond_corr_231 = [
-        os.path.join(path, "{}_cond_corr_231_{}bins.npy".format(id, _bins)) 
+    data_cmi_231 = [
+        os.path.join(path, "{}_cmi_231_{}bins.npy".format(id, _bins)) 
         for path, id in zip(data_basepaths, identifiers)
     ]
-    data_cond_corr_231_x = [
-        os.path.join(path, "{}_cond_corr_231_x_{}bins.npy".format(id, _bins)) 
+    data_cmi_231_x = [
+        os.path.join(path, "{}_cmi_231_x_{}bins.npy".format(id, _bins)) 
         for path, id in zip(data_basepaths, identifiers)
     ]
 
@@ -66,34 +66,34 @@ def main():
     t0 = -n_timesteps // n_folds # take the second half of the timeseries
 
     # Theory
-    cond_corr_theory_a = [
-        lambda x : w_neg / (alpha + w_neg) + 0. * x,
+    cmi_theory_a = [
+        lambda x : 0.5 * np.log((alpha + w_neg)**2 / (alpha * (alpha + 2 * w_neg))) + 0. * x,
         lambda x : 0. + 0. * x,
         lambda x : 0. + 0. * x
     ]
-    cond_corr_theory_b = [
-        lambda x : w_neg / np.sqrt((alpha + w_neg) * (alpha + 2 * w_neg)) + 0. * x,
+    cmi_theory_b = [
+        lambda x : 0.5 * np.log((alpha + w_neg)*(alpha + 2 * w_neg)/(alpha**2 + 3 * alpha * w_neg + w_neg**2)) + 0. * x,
         lambda x : 0. + 0. * x,
-        lambda x : w_neg / np.sqrt((alpha + w_neg) * (alpha + 2 * w_neg)) + 0. * x,
+        lambda x : 0.5 * np.log((alpha + w_neg)*(alpha + 2 * w_neg)/(alpha**2 + 3 * alpha * w_neg + w_neg**2)) + 0. * x
     ]
-    cond_corr_theory_c = [
-        lambda x : w_neg / (alpha + 2 * w_neg) + 0. * x,
-        lambda x : w_neg / (alpha + 2 * w_neg) + 0. * x,
-        lambda x : w_neg / (alpha + 2 * w_neg) + 0. * x,
+    cmi_theory_c = [
+        lambda x : 0.5 * np.log((alpha + 2 * w_neg) ** 2 / ((alpha + w_neg) * (alpha + 3 * w_neg))) + 0. * x,
+        lambda x : 0.5 * np.log((alpha + 2 * w_neg) ** 2 / ((alpha + w_neg) * (alpha + 3 * w_neg))) + 0. * x,
+        lambda x : 0.5 * np.log((alpha + 2 * w_neg) ** 2 / ((alpha + w_neg) * (alpha + 3 * w_neg))) + 0. * x
     ]
     f_theory = [
-        cond_corr_theory_a,
-        cond_corr_theory_b,
-        cond_corr_theory_c
+        cmi_theory_a,
+        cmi_theory_b,
+        cmi_theory_c
     ]
 
     # Load data
-    C12_3 = [np.load(data) for data in data_cond_corr_123]
-    Xgrid12_3 = [np.load(data) for data in data_cond_corr_123_x]
-    C13_2 = [np.load(data) for data in data_cond_corr_132]
-    Xgrid13_2 = [np.load(data) for data in data_cond_corr_132_x]
-    C23_1 = [np.load(data) for data in data_cond_corr_231]
-    Xgrid23_1 = [np.load(data) for data in data_cond_corr_231_x]
+    C12_3 = [np.load(data) for data in data_cmi_123]
+    Xgrid12_3 = [np.load(data) for data in data_cmi_123_x]
+    C13_2 = [np.load(data) for data in data_cmi_132]
+    Xgrid13_2 = [np.load(data) for data in data_cmi_132_x]
+    C23_1 = [np.load(data) for data in data_cmi_231]
+    Xgrid23_1 = [np.load(data) for data in data_cmi_231_x]
 
     Xs = [np.load(data)[:, t0:, :].flatten() for data in data_timeseris]
     RHO = [C23_1, C13_2, C12_3]
@@ -116,15 +116,10 @@ def main():
     ]
 
     YRANGE = [
-        [(0.45, 0.75), (-0.5, 0.4), (-0.5, 0.4)],
-        [(0.3, 0.65), (-0.2, 0.2), (0.2, 0.6)],
-        [(0.2, 0.55), (0.2, 0.45), (0.2, 0.45)]
+        [(0.1, 0.35), (-0.02, 0.12), (-0.02, 0.12)],
+        [(0, 0.3), (-0.01, 0.05), (0, 0.3)],
+        [(0.02, 0.2), (0.02, 0.1), (0.02, 0.1)]
     ]
-    # YRANGE = [
-    #     [(-0.5, 1), (-0.5, 1), (-0.5, 1)],
-    #     [(-0.5, 1), (-0.5, 1), (-0.5, 1)],
-    #     [(-0.5, 1), (-0.5, 1), (-0.5, 1)]
-    # ]
 
     # matplotlib configuration
     MPL_CONFIG = {
@@ -211,8 +206,8 @@ def main():
                 label='no TIs'
             )
 
-            axs[i, j].set_ylabel(r'$\rho_{}(X_{}, X_{} \mid X_{})$'.format(chr(ord('a') + i), *FIG_LABELS[j]))
-            axs[i, j].set_xlabel(r'$X_{}$'.format(j + 1))
+            axs[i, j].set_ylabel(r'$I_{}(X_{}, X_{} \mid X_{} = x)$'.format(chr(ord('a') + i), *FIG_LABELS[j]))
+            axs[i, j].set_xlabel(r'$x$')
 
             axs[i, j].set_xlim(MINMAX[i])
             axs[i, j].set_ylim(YRANGE[i][j])
@@ -230,19 +225,19 @@ def main():
             )
 
     axs[0, 0].axhline(
-        w_pos / (w_pos + alpha),
+        0.5 * np.log((alpha + w_pos)**2 / (alpha * (alpha + 2 * w_pos))),
         color='k',
         linestyle=':',
         alpha=0.6
     )
     axs[1, 0].axhline(
-        w_pos / np.sqrt((alpha + w_pos) * (alpha + 2 * w_pos)) ,
+        0.5 * np.log((alpha + w_pos)*(alpha + 2 * w_pos)/(alpha**2 + 3 * alpha * w_pos + w_pos**2)),
         color='k',
         linestyle=':',
         alpha=0.6
     )
     axs[2, 0].axhline(
-        w_pos / (2 * w_pos + alpha),
+        0.5 * np.log((alpha + 2 * w_pos) ** 2 / ((alpha + w_pos) * (alpha + 3 * w_pos))),
         color='k',
         linestyle=':',
         alpha=0.6

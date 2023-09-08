@@ -11,7 +11,7 @@ from scipy.stats import iqr
 import scipy.stats as sps
 from scipy.special import kl_div
 
-def create_node_edge_incidence_matrix(edge_list:list) -> np.ndarray:
+def create_node_edge_incidence_matrix(edge_list:list):
     """Create a node-edge incidence matrix B from a given edge list.
 
     Parameters

@@ -4,3 +4,5 @@
 src/data
 src/figure
 **/*.out
+docs/Doxyfile
+docs/latex

@@ -1,7 +1,8 @@
 """
 Triadic Interactions Package.
 
-This package contains a Node Dynamics with Triadic Interaction class and a set of functions for computations and visualization.
+This package contains a Node Dynamics with Triadic Interaction class and 
+a set of functions for computations and visualization.
 """
 from triadic_interaction.model import NDwTIs
 from triadic_interaction.computation import (

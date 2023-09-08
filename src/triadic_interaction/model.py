@@ -62,7 +62,7 @@ class NDwTIs:
         the number of timesteps
     """
     
-    def __init__(self, B, K, w_pos, w_neg, threshold, alpha, noise_std, external_force=None, x_init=None, dt=0.01, t_max=1.):
+    def __init__(self, B:np.ndarray, K:np.ndarray, w_pos:float, w_neg:float, threshold:float, alpha:float, noise_std:float, external_force=None, x_init:np.ndarray=None, dt:float=0.01, t_max:float=1.):
         """Initialise the triadic interaction null model.
         
         Parameters
@@ -125,7 +125,7 @@ class NDwTIs:
         else:
             self.x_init = x_init
     
-    def getLaplacian(self, x):
+    def getLaplacian(self, x:np.ndarray)->np.ndarray:
         """Compute the Laplacian of the states.
 
         Parameters
@@ -146,7 +146,7 @@ class NDwTIs:
         L = np.dot(self.B, np.dot(W, self.B.T))
         return L
     
-    def derivative(self, x, t):
+    def derivative(self, x:np.ndarray, t:float)->np.ndarray:
         """The time-derivatives of the states.
 
         Parameters
@@ -167,7 +167,7 @@ class NDwTIs:
             return - np.dot(L, x) - self.alpha * x + self.external_force(t)
         return - np.dot(L, x) - self.alpha * x
     
-    def noise(self, x, t):
+    def noise(self, x:np.ndarray, t:float)->np.ndarray:
         """The coeficients of the noise term.
 
         Parameters
@@ -185,7 +185,7 @@ class NDwTIs:
         """
         return self.noise_std * np.diag(np.ones(self.n_nodes)) # This results in an uncorrelated noise
     
-    def integrate(self, deterministic=False):
+    def integrate(self, deterministic:bool=False)->np.ndarray:
         """Evolve the system.
 
         Parameters
@@ -206,7 +206,7 @@ class NDwTIs:
             timeseries = sdeint.itoint(self.derivative, self.noise, self.x_init, t)
         return timeseries.T
 
-    def run(self, deterministic=False):
+    def run(self, deterministic:bool=False)->np.ndarray:
         """Run the system.
 
         Parameters
