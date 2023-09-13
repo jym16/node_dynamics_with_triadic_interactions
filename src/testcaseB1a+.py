@@ -12,21 +12,20 @@ if os.path.exists("./figure") == False:
     os.mkdir("./figure")
 
 def main():
-    # Set seed
-    seed = 123456789
+    # Set the seed for random number generator
+    seed = 1234567
     np.random.seed(seed)
 
     # Define the identifier
     identifier = "B1a+"
-    _bins = 50 # 'fd' if you want to use Freedman-Diaconis rule
+    _bins = 25 # 'fd' if you want to use Freedman-Diaconis rule
 
     """Base paths."""
-    data_basepath = "./data/testcase" + identifier
-    fig_basepath = "./figure/testcase" + identifier
+    data_basepath = "./data/" + identifier
+    fig_basepath = "./figure/" + identifier
 
     """Data filepaths."""
     data_timeseries = os.path.join(data_basepath, "{}_timeseries.npy".format(identifier))
-    data_p_evolution = os.path.join(data_basepath, "{}_p_evolution.npy".format(identifier))
     data_cond_corr_123 = os.path.join(data_basepath, "{}_cond_corr_123_{}bins.npy".format(identifier, _bins))
     data_cond_corr_123_x = os.path.join(data_basepath, "{}_cond_corr_123_x_{}bins.npy".format(identifier, _bins))
     data_cond_corr_123_stderr = os.path.join(data_basepath, "{}_cond_corr_123_stderr_{}bins.npy".format(identifier, _bins))
@@ -36,15 +35,21 @@ def main():
     data_cond_corr_231 = os.path.join(data_basepath, "{}_cond_corr_231_{}bins.npy".format(identifier, _bins))
     data_cond_corr_231_x = os.path.join(data_basepath, "{}_cond_corr_231_x_{}bins.npy".format(identifier, _bins))
     data_cond_corr_231_stderr = os.path.join(data_basepath, "{}_cond_corr_231_stderr_{}bins.npy".format(identifier, _bins))
+    data_cmi_123 = os.path.join(data_basepath, "{}_cmi_123_{}bins.npy".format(identifier, _bins))
+    data_cmi_123_x = os.path.join(data_basepath, "{}_cmi_123_x_{}bins.npy".format(identifier, _bins))
+    data_cmi_132 = os.path.join(data_basepath, "{}_cmi_132_{}bins.npy".format(identifier, _bins))
+    data_cmi_132_x = os.path.join(data_basepath, "{}_cmi_132_x_{}bins.npy".format(identifier, _bins))
+    data_cmi_231 = os.path.join(data_basepath, "{}_cmi_231_{}bins.npy".format(identifier, _bins))
+    data_cmi_231_x = os.path.join(data_basepath, "{}_cmi_231_x_{}bins.npy".format(identifier, _bins))
 
     """Figure filepaths."""
     fig_timeseries = os.path.join(fig_basepath, "{}_timeseries.pdf".format(identifier))
     fig_px = os.path.join(fig_basepath, "{}_probability_distribution_{}bins.pdf".format(identifier, _bins))
     fig_px_log = os.path.join(fig_basepath, "{}_probability_distribution_log_{}bins.pdf".format(identifier, _bins))
-    fig_p_evolution = os.path.join(fig_basepath, "{}_p_evolution.pdf".format(identifier))
     fig_cov = os.path.join(fig_basepath, "{}_covariance.pdf".format(identifier))
     fig_cond_corr = os.path.join(fig_basepath, "{}_cond_corr_{}bins.pdf".format(identifier, _bins))
     fig_cond_corr_stderr = os.path.join(fig_basepath, "{}_cond_corr_stderr_{}bins.pdf".format(identifier, _bins))
+    fig_cmi = os.path.join(fig_basepath, "{}_cmi_{}bins.pdf".format(identifier, _bins))
 
     # If the data directory does not exist
     if os.path.exists(data_basepath) == False:
@@ -82,7 +87,7 @@ def main():
     dt = 1.0e-2
     t_max = 1.0e2
     n_timesteps = int(1 + t_max / dt)
-    
+
     """The initial conditions."""
     x_init = np.zeros(n_nodes)
 
@@ -137,21 +142,6 @@ def main():
         separate=True
     )
 
-    n_x_resolution = 100
-    X_max_amp = np.max(np.abs(X)) * 1.5
-    X_bins = np.linspace(-X_max_amp, X_max_amp, n_x_resolution+1)
-    time_grid = np.linspace(0, t_max, int(t_max / dt + 1))
-
-    time_evolution = np.zeros((n_nodes, n_x_resolution, n_timesteps))
-    for i in range(n_nodes):
-        for t in range(n_timesteps):
-            p_t, _ = estimate_pdf(X[i, t, :], bins=X_bins)
-            assert(1 - np.sum(p_t) < 1e-10)
-            time_evolution[i, :, t] = p_t
-    np.save(data_p_evolution, time_evolution)
-
-    visualise_evolution(time_evolution, X_bins, time_grid, fig_p_evolution)
-
     # Trim the timeseries (for stationary distribution)
     X = X[:, t0:, :]
 
@@ -179,15 +169,6 @@ def main():
         bins=[x_bins, y_bins, z_bins],
         f_theory=f_theory, 
         output_file=fig_px, 
-        parallel=True
-    )
-
-    plot_pdf(
-        probs=[pdf_X, pdf_Y, pdf_Z],
-        bins=[x_bins, y_bins, z_bins],
-        f_theory=f_theory, 
-        output_file=fig_px, 
-        logscale=True,
         parallel=True
     )
 
@@ -309,16 +290,82 @@ def main():
         theory=cond_corr_theory
     )
 
-    # Plot the conditional correlation for X_2, X_3 | X_1
-    fig_cond_corr_231 = os.path.join(fig_basepath, "{}_cond_corr_all-samples_{}bins_rho231.pdf".format(identifier, _bins))
+    # Compute the theoretical conditional mutual information
+    cmi_theory = [
+        lambda x : 0.5 * np.log((alpha + w_neg)**2 / (alpha * (alpha + 2 * w_neg))) + 0. * x,
+        lambda x : 0. + 0. * x,
+        lambda x : 0. + 0. * x
+    ]
 
-    plot_conditional_correlation(
-        Xgrids=Xgrid23_1, 
-        cond_corr=C23_1,
-        order=(2,3,1),
-        output_file=fig_cond_corr_231, 
-        std=False,
-        theory=cond_corr_theory[0]
+    if os.path.exists(data_cmi_231) and os.path.exists(data_cmi_231_x):
+        CMI23_1 = np.load(data_cmi_231)
+        Xgrid23_1 = np.load(data_cmi_231_x)
+    else:
+        CMI23_1, _, Xgrid23_1 = conditional_mutual_information(
+            X=X[1].flatten(),
+            Y=X[2].flatten(),
+            Z=X[0].flatten(), 
+            bins=_bins,
+            pmf_method='kde',
+            method='kl-div'
+        )
+        np.save(
+            data_cmi_231, 
+            CMI23_1
+        )
+        np.save(
+            data_cmi_231_x, 
+            Xgrid23_1
+        )
+    if os.path.exists(data_cmi_132) and os.path.exists(data_cmi_132_x):
+        CMI13_2 = np.load(data_cmi_132)
+        Xgrid13_2 = np.load(data_cmi_132_x)
+    else:
+        CMI13_2, _, Xgrid13_2 = conditional_mutual_information(
+            X=X[0].flatten(),
+            Y=X[2].flatten(),
+            Z=X[1].flatten(), 
+            bins=_bins,
+            pmf_method='kde',
+            method='kl-div'
+        )
+        np.save(
+            data_cmi_132, 
+            CMI13_2
+        )
+        np.save(
+            data_cmi_132_x, 
+            Xgrid13_2
+        )
+    if os.path.exists(data_cmi_123) and os.path.exists(data_cmi_123_x):
+        CMI12_3 = np.load(data_cmi_123)
+        Xgrid12_3 = np.load(data_cmi_123_x)
+    else:
+        CMI12_3, _, Xgrid12_3 = conditional_mutual_information(
+            X=X[0].flatten(),
+            Y=X[1].flatten(),
+            Z=X[2].flatten(), 
+            bins=_bins,
+            pmf_method='kde',
+            method='kl-div'
+        )
+        np.save(
+            data_cmi_123, 
+            CMI12_3
+        )
+        np.save(
+            data_cmi_123_x, 
+            Xgrid12_3
+        )
+    
+    # Plot the conditional mutual information
+    plot_conditional_mutual_information(
+        Xgrids=[Xgrid23_1, Xgrid13_2, Xgrid12_3], 
+        cmi=[CMI23_1, CMI13_2, CMI12_3],
+        order=[(2,3,1), (1,3,2), (1,2,3)],
+        output_file=fig_cmi,
+        Xrange=plot_range,
+        theory=cmi_theory
     )
 
 if __name__ == "__main__":

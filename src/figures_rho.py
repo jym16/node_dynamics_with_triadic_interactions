@@ -212,7 +212,7 @@ def main():
             )
 
             axs[i, j].set_ylabel(r'$\rho_{}(X_{}, X_{} \mid X_{})$'.format(chr(ord('a') + i), *FIG_LABELS[j]))
-            axs[i, j].set_xlabel(r'$X_{}$'.format(j + 1))
+            axs[i, j].set_xlabel(r'$x$')
 
             axs[i, j].set_xlim(MINMAX[i])
             axs[i, j].set_ylim(YRANGE[i][j])

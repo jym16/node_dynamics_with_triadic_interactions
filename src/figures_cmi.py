@@ -211,10 +211,7 @@ def main():
 
             axs[i, j].set_xlim(MINMAX[i])
             axs[i, j].set_ylim(YRANGE[i][j])
-
-            axs[i, j].legend()
         
-            # Set the title
             axs[i, j].annotate(
                 'motif $G_{}$'.format(chr(ord('a') + i)),
                 xy=(0.05, 0.95), 
@@ -223,6 +220,7 @@ def main():
                 horizontalalignment='left', 
                 verticalalignment='top'
             )
+            axs[i, j].legend()
 
     axs[0, 0].axhline(
         0.5 * np.log((alpha + w_pos)**2 / (alpha * (alpha + 2 * w_pos))),

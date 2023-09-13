@@ -124,6 +124,10 @@ def freedman_diaconis_rule(data:np.ndarray, power:float=1./3., factor:float=2.):
         width = (factor * IQR) / np.power(n_observations, power)
 
         # Check if the width is positive
+        if width <= 0.:
+            raise ValueError(
+                'The Freedman-Diaconis rule gives a non-positive width. Use another method to compute the number of bins.'
+            )
         assert(width > 0.)
 
         # Generate the bins
@@ -567,6 +571,9 @@ def estimate_mutual_information(X:np.ndarray, Y:np.ndarray, bins:str or int='fd'
         for j in range(pmf_X.shape[0]): # Loop over X
             for k in range(pmf_Y.shape[0]): # Loop over Y
                 mi += kl_div(pmf_XY[k, j], outer_pmfXY[j, k])
+        
+        # An alternative implementation
+        # mi = sps.entropy(pmf_XY.flatten(), outer_pmfXY.flatten()) 
     
     elif method == 'entropy':
         # Calculate the entropies
