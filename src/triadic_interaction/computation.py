@@ -142,6 +142,35 @@ def freedman_diaconis_rule(data:np.ndarray, power:float=1./3., factor:float=2.):
     
     return bin_edges
 
+def binning_by_percentile(data:np.ndarray, n_bins:int=5):
+    """Generate bins by percentiles.
+
+    Parameters
+    ----------
+    data : numpy.ndarray of shape (n_observations,)
+        The data.
+    n_bins : int, optional
+        (default = 5)
+        The number of bins.
+
+    Returns
+    -------
+    bin_edges : numpy.ndarray of shape (n_bins+1,)
+        The bin edges.
+    
+    """
+    # Check the shape of the data
+    _check_data_shape(data)
+
+    # Get the number of observations
+    n_observations = data.shape[0]
+
+    # Compute the bin edges
+    bin_edges = np.linspace(0, 100, n_bins + 1)
+    bin_edges = np.percentile(data, bin_edges)
+
+    return bin_edges
+
 def _check_data_shape(data:np.ndarray):
     """Check the shape of the data.
     
@@ -173,6 +202,7 @@ def _generate_bins(data:np.ndarray, bins:str or np.ndarray or int or list or tup
     bins : str or a sequence of int or int or list or tuple
         The number of bins or the method to compute the number of bins.
             - 'fd' (str) : The number of bins is computed using the Freedman-Diaconis rule.
+            - ('percentile', n_bins) (tuple of str and int) : The number of bins is computed by percentiles.
             - n (int) : The number of bins for the variable.
             - list or tuple (list or tuple of numpy.ndarray) : The bin edges for each variable.
     
@@ -215,6 +245,11 @@ def _generate_bins(data:np.ndarray, bins:str or np.ndarray or int or list or tup
             max_amp = np.max(np.abs(data))
             bin_edges = np.linspace(-max_amp, max_amp, bins+1)
             n_bins = bins
+        
+        elif isinstance(bins, tuple) and bins[0] == 'percentile':
+            bin_edges = binning_by_percentile(data.flatten(), n_bins=bins[1])
+            n_bins = bins[1]
+        
         else:
             raise ValueError('Invalid bins.')
         
@@ -270,6 +305,15 @@ def _generate_bins(data:np.ndarray, bins:str or np.ndarray or int or list or tup
             n_bins = [
                 len(bin_edges[d]) - 1 for d in range(n_variables)
             ]
+        
+        elif isinstance(bins, tuple) and bins[0] == 'percentile':
+            bin_edges = [
+                binning_by_percentile(data[d], n_bins=bins[1]) for d in range(n_variables)
+            ]
+            n_bins = [
+                bins[1] for d in range(n_variables)
+            ]
+    
     else:
         raise ValueError('Invalid data.')
     

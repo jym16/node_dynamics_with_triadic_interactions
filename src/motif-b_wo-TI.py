@@ -18,7 +18,8 @@ def main():
 
     # Define the identifier
     identifier = "motif-b"
-    _bins = 25 # 'fd' if you want to use Freedman-Diaconis rule
+    # _bins = 25 # 'fd' if you want to use Freedman-Diaconis rule
+    _bins = ('percentile', 20)
 
     """Base path."""
     data_basepath = "./data/" + identifier
@@ -189,7 +190,7 @@ def main():
         theory=cov_theo
     )
 
-    plot_range = [extract_by_std(X[i]) for i in range(n_nodes)]
+    # plot_range = [extract_by_std(X[i]) for i in range(n_nodes)]
 
     # Compute the theoretical conditional correlation
     cond_corr_theory = [
@@ -276,7 +277,7 @@ def main():
         order=[(2,3,1), (1,3,2), (1,2,3)],
         output_file=fig_cond_corr, 
         std=False,
-        Xrange=plot_range,
+        # Xrange=plot_range,
         theory=cond_corr_theory
     )
 
@@ -287,7 +288,7 @@ def main():
         order=[(2,3,1), (1,3,2), (1,2,3)],
         output_file=fig_cond_corr_stderr, 
         std=[dC23_1, dC13_2, dC12_3],
-        Xrange=plot_range,
+        # Xrange=plot_range,
         theory=cond_corr_theory
     )
 
@@ -365,7 +366,7 @@ def main():
         cmi=[CMI23_1, CMI13_2, CMI12_3],
         order=[(2,3,1), (1,3,2), (1,2,3)],
         output_file=fig_cmi,
-        Xrange=plot_range,
+        # Xrange=plot_range,
         theory=cmi_theory
     )
 
