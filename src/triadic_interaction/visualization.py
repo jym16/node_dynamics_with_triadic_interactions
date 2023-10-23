@@ -103,7 +103,7 @@ def plot_timeseries(X:np.ndarray, output_file:str, t_max:float, n_samples:int=1,
                 ax.plot(
                     T, 
                     X[n, :, i], 
-                    label="node {}, sample# {}".format(
+                    label="node {}, sample# {}" % (
                         n+1, 
                         i+1
                     ), 
@@ -141,11 +141,11 @@ def plot_timeseries(X:np.ndarray, output_file:str, t_max:float, n_samples:int=1,
                 ax[n].plot(
                     T, 
                     X[n, :, i], 
-                    label="node {}, sample# {}".format(n+1, i+1), 
+                    label="node {}, sample# {}" % (n+1, i+1), 
                     alpha=0.5
                 )
                 # Set the y labels and x limits
-                ax[n].set_ylabel("$X_{}$".format(n+1))
+                ax[n].set_ylabel("$X_{%d}$" % (n+1))
                 ax[n].set_xlim(0, t_max)
                 
         # Loop over nodes
@@ -155,7 +155,7 @@ def plot_timeseries(X:np.ndarray, output_file:str, t_max:float, n_samples:int=1,
                 T, 
                 np.mean(X[n, :, :], axis=1), 
                 "k--", 
-                label="node {} average".format(n+1), 
+                label="node {} average" % (n+1), 
                 alpha=0.5
             )
         
@@ -239,7 +239,7 @@ def plot_pdf(probs:list, bins:list, output_file:str, f_theory=None, logscale:boo
                 ax.scatter(
                     bins[i], 
                     probs[i], 
-                    label="X_{i}".format(i=i+1),
+                    label="X_{%d}" % (i+1),
                     edgecolors='r',
                     facecolors='none',
                     marker='o'
@@ -249,7 +249,7 @@ def plot_pdf(probs:list, bins:list, output_file:str, f_theory=None, logscale:boo
                 ax.scatter(
                     bins[i], 
                     np.mean(probs[i], axis=1), 
-                    label="X_{i}".format(i=i+1),
+                    label="X_{%d}" % (i+1),
                     facecolors='none',
                     edgecolors='r',
                     marker='o'
@@ -282,7 +282,7 @@ def plot_pdf(probs:list, bins:list, output_file:str, f_theory=None, logscale:boo
                     x_theory, 
                     p_theory, 
                     "--", 
-                    label="theory ($X_{i}$)".format(i=i+1)
+                    label="theory ($X_{%d}$)" % (i+1)
                 )
         
         # Set the yscale to log
@@ -337,7 +337,7 @@ def plot_pdf(probs:list, bins:list, output_file:str, f_theory=None, logscale:boo
                 )
 
             # Set the x-axis
-            axs[i].set_xlabel("$X_{i}$".format(i=i+1))
+            axs[i].set_xlabel("$X_{%d}$" % (i+1))
             axs[i].set_xlim(
                 Xmin[i],
                 Xmax[i]
@@ -691,10 +691,10 @@ def plot_conditional_correlation(Xgrids:np.ndarray or list, cond_corr:np.ndarray
             
             # Set the labels
             ax[i].set_xlabel(
-                '$X_{}$'.format(order[i][2])
+                '$X_{%d}$' % (order[i][2])
             )
             ax[i].set_ylabel(
-                r'$\rho(X_{}, X_{} \mid X_{})$'.format(
+                r'$\rho(X_{%d}, X_{%d} \mid X_{%d})$' % (
                     order[i][0], order[i][1], order[i][2]
                 )
             )
@@ -755,10 +755,10 @@ def plot_conditional_correlation(Xgrids:np.ndarray or list, cond_corr:np.ndarray
 
         # Set the labels
         ax.set_xlabel(
-            '$X_{}$'.format(order[2])
+            r'$X_{%d}$' % (order[2])
         )
         ax.set_ylabel(
-            r'$\rho(X_{}, X_{} \mid X_{})$'.format(order[0], order[1], order[2])
+            r'$\rho(X_{%d}, X_{%d} \mid X_{%d})$' % (order[0], order[1], order[2])
         )
         if threshold is not None:
             ax.axvline(threshold, linestyle=':', color='k')
@@ -889,10 +889,10 @@ def plot_conditional_mutual_information(Xgrids:np.ndarray or list, cmi:np.ndarra
             
             # Set the labels
             ax[i].set_xlabel(
-                '$X_{}$'.format(order[i][2])
+                r'$X_{%d}$' % (order[i][2])
             )
             ax[i].set_ylabel(
-                '$I(X_{}; X_{} \mid X_{})$'.format(
+                r'$I(X_{%d}; X_{%d} \mid X_{%d})$' % (
                     order[i][0], order[i][1], order[i][2]
                 )
             )
@@ -937,10 +937,10 @@ def plot_conditional_mutual_information(Xgrids:np.ndarray or list, cmi:np.ndarra
         
         # Set the labels
         ax.set_xlabel(
-            '$X_{}$'.format(order[2])
+            r'$X_{%d}$' % (order[2])
         )
         # ax.set_ylabel(
-        #     '$I(X_{}; X_{} \mid X_{})$'.format(order[0], order[1], order[2])
+        #     r'$I(X_{%d}; X_{%d} \mid X_{%d})$' % (order[0], order[1], order[2])
         # )
 
     # Apply the layout
