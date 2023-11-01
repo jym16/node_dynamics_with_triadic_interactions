@@ -77,8 +77,8 @@ def plot_timeseries(X:np.ndarray, output_file:str, t_max:float, n_samples:int=1,
     
     Returns
     -------
-    None
-
+    fig : matplotlib.figure.Figure
+        The figure.
     """
     # Update matplotlib rcParams
     plt.rcParams.update(MPL_CONFIG)
@@ -177,8 +177,7 @@ def plot_timeseries(X:np.ndarray, output_file:str, t_max:float, n_samples:int=1,
     # Save the figure
     fig.savefig(output_file)
 
-    # Close the figure
-    plt.close(fig)
+    return fig
 
 def plot_pdf(probs:list, bins:list, output_file:str, f_theory=None, logscale:bool=False, parallel:bool=False):
     """Plot the probability distributions.
@@ -203,8 +202,8 @@ def plot_pdf(probs:list, bins:list, output_file:str, f_theory=None, logscale:boo
     
     Returns
     -------
-    None
-    
+    fig : matplotlib.figure.Figure
+        The figure.
     """
     # Update matplotlib rcParams
     plt.rcParams.update(MPL_CONFIG)
@@ -372,8 +371,7 @@ def plot_pdf(probs:list, bins:list, output_file:str, f_theory=None, logscale:boo
     # Save the figure
     fig.savefig(output_file)
 
-    # Close the figure
-    plt.close(fig)
+    return fig
 
 def plot_covariance(cov:np.ndarray, output_file:str, theory=None):
     """Plot the covariance matrix.
@@ -390,8 +388,8 @@ def plot_covariance(cov:np.ndarray, output_file:str, theory=None):
     
     Returns
     -------
-    None
-
+    fig : matplotlib.figure.Figure
+        The figure.
     """
     # Set the labels
     labels = [
@@ -520,8 +518,7 @@ def plot_covariance(cov:np.ndarray, output_file:str, theory=None):
     # Save the figure
     fig.savefig(output_file)
 
-    # Close the figure
-    plt.close(fig)
+    return fig
 
 def plot_conditional_correlation(Xgrids:np.ndarray or list, cond_corr:np.ndarray or list, order:tuple or list, output_file:str, std:bool or list=False, Xrange:tuple or list=None, theory=None, f_supplement=None, threshold:float or list=None):
     """Plot the conditional correlation.
@@ -555,8 +552,8 @@ def plot_conditional_correlation(Xgrids:np.ndarray or list, cond_corr:np.ndarray
         The threshold value
     Returns
     -------
-    None
-
+    fig : matplotlib.figure.Figure
+        The figure.
     """
     # Set the style of the plot
     plt.rcParams.update(MPL_CONFIG)
@@ -564,31 +561,12 @@ def plot_conditional_correlation(Xgrids:np.ndarray or list, cond_corr:np.ndarray
     # If the input is an array
     if isinstance(Xgrids, list):
         n_data = len(Xgrids)
-
-        if Xrange is None:
-            Xmin = [np.min(Xgrids[i]) for i in range(n_data)]
-            Xmax = [np.max(Xgrids[i]) for i in range(n_data)]
-        else:
-            Xmin = [Xrange[i][0] for i in range(n_data)]
-            Xmax = [Xrange[i][1] for i in range(n_data)]
         
-        # Ymin = [-1 for i in range(n_data)]
-        # Ymax = [1 for i in range(n_data)]
-        Ymin = [
-            0.8 * min(np.nanmin(theory[i](Xgrids[i])), np.nanmin(cond_corr[i][(cond_corr[i] != -np.inf) & (Xgrids[i] >= Xmin[i]) & (Xgrids[i] <= Xmax[i])])) - 0.1
-            for i in range(n_data)
-        ]
-        Ymax = [
-            1.2 * max(np.nanmax(theory[i](Xgrids[i])), np.nanmax(cond_corr[i][(cond_corr[i] != np.inf) & (Xgrids[i] >= Xmin[i]) & (Xgrids[i] <= Xmax[i])])) + 0.1
-            for i in range(n_data)
-        ]
-         
         # Create a figure
         fig, ax = plt.subplots(
             nrows=1, 
             ncols=len(Xgrids), 
-            figsize=(len(Xgrids)*2.5, 2.5),
-            # sharey=True
+            figsize=(len(Xgrids)*2.5, 2.5)
         )
 
         # Plot the conditional correlation
@@ -609,8 +587,7 @@ def plot_conditional_correlation(Xgrids:np.ndarray or list, cond_corr:np.ndarray
                     Xgrids[i], 
                     cond_corr[i], 
                     edgecolor='r',
-                    facecolor='none',
-                    # s=1
+                    facecolor='none'
                 )
                 # If std is True
                 if isinstance(std, list):
@@ -626,15 +603,33 @@ def plot_conditional_correlation(Xgrids:np.ndarray or list, cond_corr:np.ndarray
                         alpha=0.5
                     )
             
+            if Xrange is None:
+                Xmin = [np.min(Xgrids[i]) for i in range(n_data)]
+                Xmax = [np.max(Xgrids[i]) for i in range(n_data)]
+            else:
+                Xmin = [Xrange[i][0] for i in range(n_data)]
+                Xmax = [Xrange[i][1] for i in range(n_data)]
+            
             ax[i].set_xlim(
                 Xmin[i],
                 Xmax[i]
             )
-            ax[i].set_ylim(
-                Ymin[i],
-                Ymax[i]
-            )
+
+            if theory is not None:
+                Ymin = [
+                    0.8 * min(np.nanmin(theory[i](Xgrids[i])), np.nanmin(cond_corr[i][(cond_corr[i] != -np.inf) & (Xgrids[i] >= Xmin[i]) & (Xgrids[i] <= Xmax[i])])) - 0.1
+                    for i in range(n_data)
+                ]
+                Ymax = [
+                    1.2 * max(np.nanmax(theory[i](Xgrids[i])), np.nanmax(cond_corr[i][(cond_corr[i] != np.inf) & (Xgrids[i] >= Xmin[i]) & (Xgrids[i] <= Xmax[i])])) + 0.1
+                    for i in range(n_data)
+                ]
             
+                ax[i].set_ylim(
+                    Ymin[i],
+                    Ymax[i]
+                )
+                
             if theory is not None:
                 # Plot the theoretical solution
                 ax[i].plot(
@@ -684,10 +679,12 @@ def plot_conditional_correlation(Xgrids:np.ndarray or list, cond_corr:np.ndarray
                     )
 
             if threshold is not None:
-                ax[i].axvline(threshold, linestyle=':', color='k')
+                ax[i].axvline(
+                    threshold, linestyle=':', color='k'
+                )
 
-            # Set the legend
-            ax[i].legend(loc='best')
+            # # Set the legend
+            # ax[i].legend(loc='best')
             
             # Set the labels
             ax[i].set_xlabel(
@@ -709,8 +706,6 @@ def plot_conditional_correlation(Xgrids:np.ndarray or list, cond_corr:np.ndarray
         else:
             Xmin = Xrange[0]
             Xmax = Xrange[1]
-        
-        # Ymin, Ymax = -1, 1
         
         if std is False:
             ax.scatter(
@@ -748,10 +743,6 @@ def plot_conditional_correlation(Xgrids:np.ndarray or list, cond_corr:np.ndarray
             Xmin,
             Xmax
         )
-        # ax.set_ylim(
-        #     Ymin,
-        #     Ymax
-        # )
 
         # Set the labels
         ax.set_xlabel(
@@ -761,7 +752,9 @@ def plot_conditional_correlation(Xgrids:np.ndarray or list, cond_corr:np.ndarray
             r'$\rho(X_{%d}, X_{%d} \mid X_{%d})$' % (order[0], order[1], order[2])
         )
         if threshold is not None:
-            ax.axvline(threshold, linestyle=':', color='k')
+            ax.axvline(
+                threshold, linestyle=':', color='k'
+            )
 
     # Apply the layout
     fig.tight_layout()
@@ -769,8 +762,7 @@ def plot_conditional_correlation(Xgrids:np.ndarray or list, cond_corr:np.ndarray
     # Save the figure
     fig.savefig(output_file)
     
-    # Close the figure
-    plt.close(fig)
+    return fig
 
 def plot_conditional_mutual_information(Xgrids:np.ndarray or list, cmi:np.ndarray or list, order:tuple or list, output_file:str, std:bool or list=False, Xrange:tuple or list=None, theory=None):
     """Plot conditional mutual information.
@@ -798,8 +790,8 @@ def plot_conditional_mutual_information(Xgrids:np.ndarray or list, cmi:np.ndarra
 
     Returns
     -------
-    None
-
+    fig : matplotlib.figure.Figure
+        The figure.
     """
     # Set the style of the plot
     plt.rcParams.update(MPL_CONFIG)
@@ -819,8 +811,7 @@ def plot_conditional_mutual_information(Xgrids:np.ndarray or list, cmi:np.ndarra
         fig, ax = plt.subplots(
             nrows=1, 
             ncols=len(Xgrids), 
-            figsize=(len(Xgrids)*2.5, 2.5),
-            # sharey=True
+            figsize=(len(Xgrids)*2.5, 2.5)
         )
 
         # Plot the conditional mutual information
@@ -859,10 +850,8 @@ def plot_conditional_mutual_information(Xgrids:np.ndarray or list, cmi:np.ndarra
                     Xgrids[i][(Xgrids[i] >= Xmin[i]) & (Xgrids[i] <= Xmax[i])], 
                     cmi[i][(Xgrids[i] >= Xmin[i]) & (Xgrids[i] <= Xmax[i])], 
                     edgecolor='r',
-                    facecolor='none',
-                    # s=1
+                    facecolor='none'
                 )
-            # ax[i].axhline(0, color='k', linestyle='-', linewidth=0.5)
             
             if theory is not None:
                 # Plot the theoretical solution
@@ -875,17 +864,10 @@ def plot_conditional_mutual_information(Xgrids:np.ndarray or list, cmi:np.ndarra
                 # Set the legend
                 ax[i].legend()
 
-
-
             ax[i].set_xlim(
                 Xmin[i],
                 Xmax[i]
             )
-
-            # ax[i].set_ylim(
-            #     min(np.min(theory[i](Xgrids[i])), np.min(cmi[i][(cmi[i] != -np.inf) & (Xgrids[i] >= Xmin[i]) & (Xgrids[i] <= Xmax[i])])) - 0.1,
-            #     max(np.max(theory[i](Xgrids[i])), np.max(cmi[i][(cmi[i] != np.inf) & (Xgrids[i] >= Xmin[i]) & (Xgrids[i] <= Xmax[i])])) + 0.1
-            # )
             
             # Set the labels
             ax[i].set_xlabel(
@@ -929,19 +911,11 @@ def plot_conditional_mutual_information(Xgrids:np.ndarray or list, cmi:np.ndarra
             Xmin,
             Xmax
         )
-
-        # ax.set_ylim(
-        #     min(np.min(theory(Xgrids)), np.min(cmi[(Xgrids >= Xmin) & (Xgrids <= Xmax)])),
-        #     max(np.max(theory(Xgrids)), np.max(cmi[(Xgrids >= Xmin) & (Xgrids <= Xmax)]))
-        # )
         
         # Set the labels
         ax.set_xlabel(
             r'$X_{%d}$' % (order[2])
         )
-        # ax.set_ylabel(
-        #     r'$I(X_{%d}; X_{%d} \mid X_{%d})$' % (order[0], order[1], order[2])
-        # )
 
     # Apply the layout
     fig.tight_layout()
@@ -949,7 +923,6 @@ def plot_conditional_mutual_information(Xgrids:np.ndarray or list, cmi:np.ndarra
     # Save the figure
     fig.savefig(output_file)
     
-    # Close the figure
-    plt.close(fig)
+    return fig
 
 """End of file"""
